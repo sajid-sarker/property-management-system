@@ -1,17 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage.jsx';
-import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';
-import SignupPage from './pages/SignupPage.jsx';
-import Properties from './pages/Properties.jsx';
-import PropertyListPage from './pages/PropertyListPage.jsx';
-import PropertyDetailsPage from './pages/PropertyDetailsPage.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import ProfilePage from './pages/ProfilePage.jsx';
-import WishlistPage from './pages/WishlistPage.jsx';
-import DevelopmentRequests from './pages/DevelopmentRequests.jsx';
-import AddPropertyPage from './pages/AddPropertyPage.jsx';
+import HomePage from './pages/HomePage';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import SignupPage from './pages/SignupPage';
+import Properties from './pages/Properties';
+import PropertyListPage from './pages/PropertyListPage';
+import PropertyDetailsPage from './pages/PropertyDetailsPage';
+import Dashboard from './pages/Dashboard';
+import ProfilePage from './pages/ProfilePage';
+import WishlistPage from './pages/WishlistPage';
+import DevelopmentRequests from './pages/DevelopmentRequests';
+import AddPropertyPage from './pages/AddPropertyPage';
 
 function App() {
     return (
