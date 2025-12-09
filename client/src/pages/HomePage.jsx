@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { FaSearch, FaArrowRight, FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaStar, FaBars } from 'react-icons/fa';
 import { propertyService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const HomePage = () => {
+    const { user } = useAuth();
     const [scrolled, setScrolled] = useState(false);
     const { scrollY } = useScroll();
     const yHero = useTransform(scrollY, [0, 500], [0, 200]);
@@ -43,7 +45,11 @@ const HomePage = () => {
                     <a href="#contact" className="nav-link">Contact</a>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <Link to="/login"><button className="btn btn-primary" style={{ fontSize: '0.875rem', padding: '0.5rem 1.5rem' }}>Login</button></Link>
+                    {user ? (
+                        <Link to="/dashboard"><button className="btn btn-outline" style={{ fontSize: '0.875rem', padding: '0.5rem 1.5rem' }}>Dashboard</button></Link>
+                    ) : (
+                        <Link to="/login"><button className="btn btn-primary" style={{ fontSize: '0.875rem', padding: '0.5rem 1.5rem' }}>Login</button></Link>
+                    )}
                     <FaBars className="mobile-menu-icon" style={{ fontSize: '1.5rem', color: 'var(--color-text-main)', display: 'none' }} />
                 </div>
             </div>
@@ -125,6 +131,27 @@ const HomePage = () => {
                     </motion.div>
                 </motion.div>
             </section>
+
+            {/* Recommended for You (Logged In) */}
+            {user && (
+                <section style={{ padding: '6rem 0 2rem 0', background: 'var(--color-primary)' }}>
+                    <div className="container">
+                        <h4 className="text-accent" style={{ textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.875rem', marginBottom: '1rem' }}>
+                            {user.role === 'landlord' ? 'Market Insights' : 'Recommended For You'}
+                        </h4>
+                        <div style={{ background: 'var(--color-primary-light)', padding: '2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <p style={{ color: 'white' }}>
+                                {/* MOCK DATA: This recommendation text is hardcoded based on role. Replace with dynamic AI-driven recommendations or stats. */}
+                                {user.role === 'renter' && "Based on your search for 'Villas', check out these new listings in Beverly Hills."}
+                                {user.role === 'landlord' && "Rental demand in New York has increased by 15% this week."}
+                                {user.role === 'company' && "Your agency performance is in the top 10% this month."}
+                                {user.role === 'admin' && "System health is optimal. No critical alerts."}
+                                {!['renter', 'landlord', 'company', 'admin'].includes(user.role) && "Welcome back! Check out the latest properties."}
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Featured Collection */}
             <section id="featured" className="featured-section" style={{ padding: '8rem 0', background: 'var(--color-primary)' }}>

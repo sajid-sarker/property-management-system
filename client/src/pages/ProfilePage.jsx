@@ -2,22 +2,46 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
+import { authService } from '../services/api';
+
 const ProfilePage = () => {
     const navigate = useNavigate();
     const [profile, setProfile] = useState({
-        name: 'John Doe',
-        email: 'john@example.com',
-        bio: 'Real estate enthusiast and investor.',
-        phone: '+1 234 567 8900'
+        name: '',
+        email: '',
+        bio: '',
+        phone: ''
     });
+    const [loading, setLoading] = useState(true);
+
+    React.useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const response = await authService.getCurrentUser();
+                // Assuming response.data contains user fields
+                setProfile(prev => ({ ...prev, ...response.data }));
+            } catch (error) {
+                console.error("Failed to fetch profile", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProfile();
+    }, []);
 
     const handleChange = (e) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert('Profile Updated Successfully! (Mock)');
+        try {
+            await authService.updateProfile(profile);
+            alert('Profile Updated Successfully!');
+        } catch (error) {
+            console.error("Failed to update profile", error);
+            alert('Failed to update profile.');
+        }
     };
 
     return (

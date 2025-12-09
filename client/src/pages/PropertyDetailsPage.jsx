@@ -11,11 +11,8 @@ const PropertyDetailsPage = () => {
     useEffect(() => {
         const fetchProperty = async () => {
             try {
-                // In a real app this would fetch by ID from backend
-                const response = await propertyService.getAll();
-                // Simulating getById since our mock api.js might not have specific data for random IDs
-                const found = response.data.find(p => p.id === parseInt(id)) || response.data[0];
-                setProperty(found);
+                const response = await propertyService.getById(id);
+                setProperty(response.data);
             } catch (error) {
                 console.error("Failed to fetch property", error);
             } finally {
@@ -113,20 +110,7 @@ const PropertyDetailsPage = () => {
                     {/* Reviews Section (Req: Renters) */}
                     <div style={{ marginTop: '4rem' }}>
                         <h2 style={{ marginBottom: '2rem', fontFamily: 'var(--font-heading)' }}>Client Reviews</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                            {[
-                                { user: 'Michael R.', rating: 5, comment: 'Absolutely stunning property. The views are breathtaking and the location is perfect.' },
-                                { user: 'Elena V.', rating: 4, comment: 'Great amenities, especially the rooftop terrace. Parking was a bit tight though.' }
-                            ].map((review, i) => (
-                                <div key={i} style={{ paddingBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                        <div style={{ fontWeight: 600 }}>{review.user}</div>
-                                        <div style={{ color: 'var(--color-accent)' }}>{'★'.repeat(review.rating)}</div>
-                                    </div>
-                                    <p style={{ color: 'var(--color-text-light)' }}>"{review.comment}"</p>
-                                </div>
-                            ))}
-                        </div>
+                        <p style={{ color: 'var(--color-text-light)' }}>No reviews yet.</p>
                     </div>
                 </div>
 
