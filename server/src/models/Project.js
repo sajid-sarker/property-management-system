@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import autoIncrement from "../utils/autoIncrement.js";
 
+// Project schema for development requests
 const projectSchema = new mongoose.Schema(
   {
     projectId: {
@@ -9,7 +10,7 @@ const projectSchema = new mongoose.Schema(
     },
     title: String,
     description: String,
-
+    location: String,
     budget: Number,
     deadline: Date,
 
@@ -17,7 +18,6 @@ const projectSchema = new mongoose.Schema(
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     // List of bids from companies
     bids: [
@@ -30,13 +30,13 @@ const projectSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-Project = mongoose.model("Project", projectSchema);
-
 projectSchema.plugin(autoIncrement, {
   model: "Project",
   field: "projectId",
   prefix: "PROJ-",
   padLength: 6,
 });
+
+const Project = mongoose.model("Project", projectSchema);
 
 export default Project;

@@ -1,13 +1,16 @@
 import mongoose from "mongoose";
 import autoIncrement from "../utils/autoIncrement.js";
 
-const autoIncrement = require("../utils/autoIncrement.js");
-// Main user class. Others will inherit
+// Property schema aligned with frontend requirements
 const propertySchema = new mongoose.Schema(
   {
     propertyId: {
       type: String,
       unique: true,
+    },
+    title: {
+      type: String,
+      required: true
     },
     description: {
       type: String,
@@ -15,37 +18,66 @@ const propertySchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["house", "apartment", "land", "commercial"],
+      enum: ["house", "apartment", "land", "commercial", "For Sale", "For Rent"],
     },
     address: {
       street: String,
       city: String,
       state: String,
       country: String,
-      required: true,
     },
+    // Legacy field for frontend compatibility
+    location: String,
 
     landlord: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
 
     averageRating: {
       type: Number,
-      required: true,
-    },
-    images: {
-      images: [String],
-      required: true,
+      default: 0,
     },
 
-    price: Number,
-    rentPrice: Number,
+    // Property details
+    beds: Number,
+    baths: Number,
+    sqft: String,
+    price: String,
+    rentPrice: String,
     isForSale: Boolean,
     isForRent: Boolean,
 
+    // Images - single array
     images: [String],
+    // Legacy single image for frontend compatibility
+    image: String,
+
+    // Boost feature
+    isBoosted: {
+      type: Boolean,
+      default: false
+    },
+
+    // Reviews from renters
+    reviews: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        rating: Number,
+        comment: String,
+        date: { type: Date, default: Date.now }
+      }
+    ],
+
+    // Bids from buyers
+    bids: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        amount: Number,
+        date: { type: Date, default: Date.now },
+        status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" }
+      }
+    ],
 
     status: {
       type: String,
@@ -54,9 +86,10 @@ const propertySchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // createdAt, updatedAt
+    timestamps: true,
   }
 );
+
 // For generation of Property ID
 propertySchema.plugin(autoIncrement, {
   model: "Property",
@@ -65,7 +98,6 @@ propertySchema.plugin(autoIncrement, {
   padLength: 6,
 });
 
-// Creation of the model based on above schema
 const Property = mongoose.model("Property", propertySchema);
 
 export default Property;

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import autoIncrement from "../utils/autoIncrement.js";
 
-// Main user class. Others will inherit
+// User schema with all roles
 const userSchema = new mongoose.Schema(
   {
     userId: {
@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["general", "landlord", "company"],
+      enum: ["general", "landlord", "company", "tenant", "agent"],
       required: true,
     },
     email: {
@@ -32,7 +32,11 @@ const userSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      required: true,
+      default: "https://randomuser.me/api/portraits/men/1.jpg",
+    },
+    bio: {
+      type: String,
+      default: "",
     },
     description: {
       type: String,
@@ -62,7 +66,7 @@ const userSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // createdAt, updatedAt
+    timestamps: true,
   }
 );
 
@@ -74,6 +78,5 @@ userSchema.plugin(autoIncrement, {
   padLength: 6,
 });
 
-// Creation of the model based on above schema
 const User = mongoose.model("User", userSchema);
 export default User;
