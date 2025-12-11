@@ -1,16 +1,15 @@
 import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
-// import Property from "./models/Property.js";
+import propertyRoutes from "./routes/propertyRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-// app.post("/properties", async(req, res) => {
-//     const property = req.body; // Users will send this data
+app.use(express.json()); // Allows us to use JSON data in req.body
 
-// });
+app.use("/api/products", propertyRoutes);
 
 app.listen(5000, () => {
   connectDB();
