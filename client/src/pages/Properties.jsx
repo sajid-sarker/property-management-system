@@ -87,9 +87,17 @@ const Properties = () => {
                         style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2.5rem' }}
                     >
                         <AnimatePresence>
-                            {properties.filter(p => filter === 'all' || p.type.toLowerCase().includes(filter)).map((prop) => (
-                                <PropertyCard key={prop.id} data={prop} />
-                            ))}
+                            {properties
+                                .filter(p => {
+                                    if (filter === 'all') return true;
+                                    const propType = (p.type || '').toLowerCase();
+                                    if (filter === 'sale') return propType.includes('sale') || p.isForSale;
+                                    if (filter === 'rent') return propType.includes('rent') || p.isForRent;
+                                    return true;
+                                })
+                                .map((prop) => (
+                                    <PropertyCard key={prop._id || prop.propertyId || prop.id} data={prop} />
+                                ))}
                         </AnimatePresence>
                     </motion.div>
                 )}
@@ -98,46 +106,53 @@ const Properties = () => {
     );
 };
 
-const PropertyCard = ({ data }) => (
-    <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        whileHover={{ y: -10 }}
-        style={{ background: 'var(--color-primary-light)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', display: 'block' }}
-    >
-        <Link to={`/properties/${data.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ height: '280px', overflow: 'hidden', position: 'relative' }}>
-                <img src={data.image} alt={data.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
-                <div style={{
-                    position: 'absolute', top: '1rem', right: '1rem',
-                    background: 'rgba(212, 175, 55, 0.9)',
-                    color: 'var(--color-primary)',
-                    padding: '0.25rem 0.75rem',
-                    fontWeight: 700, borderRadius: '2px',
-                    fontSize: '0.8rem', textTransform: 'uppercase'
-                }}>
-                    {data.type}
+const PropertyCard = ({ data }) => {
+    // Handle both database and mock data formats
+    const propertyId = data._id || data.propertyId || data.id;
+    const imageUrl = data.image || (data.images && data.images[0]) || 'https://via.placeholder.com/400x300?text=No+Image';
+    const locationText = data.location || (data.address && `${data.address.city || ''}, ${data.address.state || ''}`) || 'Location N/A';
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            whileHover={{ y: -10 }}
+            style={{ background: 'var(--color-primary-light)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', display: 'block' }}
+        >
+            <Link to={`/properties/${propertyId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div style={{ height: '280px', overflow: 'hidden', position: 'relative' }}>
+                    <img src={imageUrl} alt={data.title || 'Property'} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
+                    <div style={{
+                        position: 'absolute', top: '1rem', right: '1rem',
+                        background: 'rgba(212, 175, 55, 0.9)',
+                        color: 'var(--color-primary)',
+                        padding: '0.25rem 0.75rem',
+                        fontWeight: 700, borderRadius: '2px',
+                        fontSize: '0.8rem', textTransform: 'uppercase'
+                    }}>
+                        {data.type || (data.isForSale ? 'For Sale' : 'For Rent')}
+                    </div>
                 </div>
-            </div>
-            <div style={{ padding: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <h3 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-heading)' }}>{data.title}</h3>
-                    <div style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{data.price}</div>
+                <div style={{ padding: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-heading)' }}>{data.title || 'Untitled Property'}</h3>
+                        <div style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{data.price || data.rentPrice || 'Price N/A'}</div>
+                    </div>
+                    <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+                        <FaMapMarkerAlt className="text-accent" /> {locationText}
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', color: 'var(--color-text-main)', fontSize: '0.9rem' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaBed className="text-accent" /> {data.beds || 0} Beds</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaBath className="text-accent" /> {data.baths || 0} Baths</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaRulerCombined className="text-accent" /> {data.sqft || 'N/A'}</span>
+                    </div>
                 </div>
-                <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-                    <FaMapMarkerAlt className="text-accent" /> {data.location}
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', color: 'var(--color-text-main)', fontSize: '0.9rem' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaBed className="text-accent" /> {data.beds} Beds</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaBath className="text-accent" /> {data.baths} Baths</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaRulerCombined className="text-accent" /> {data.sqft}</span>
-                </div>
-            </div>
-        </Link>
-    </motion.div>
-);
+            </Link>
+        </motion.div>
+    );
+};
 
 const filterBtnStyle = {
     padding: '0.5rem 1.5rem',

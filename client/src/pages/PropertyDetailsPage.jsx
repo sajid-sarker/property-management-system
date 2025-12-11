@@ -11,13 +11,21 @@ const PropertyDetailsPage = () => {
     useEffect(() => {
         const fetchProperty = async () => {
             try {
-                // In a real app this would fetch by ID from backend
-                const response = await propertyService.getAll();
-                // Simulating getById since our mock api.js might not have specific data for random IDs
-                const found = response.data.find(p => p.id === parseInt(id)) || response.data[0];
-                setProperty(found);
+                // Fetch property by ID from backend
+                const response = await propertyService.getById(id);
+                setProperty(response.data);
             } catch (error) {
                 console.error("Failed to fetch property", error);
+                // Fallback: try to get from all properties if getById fails
+                try {
+                    const allResponse = await propertyService.getAll();
+                    const found = allResponse.data.find(p =>
+                        p._id === id || p.propertyId === id || String(p.id) === id
+                    );
+                    if (found) setProperty(found);
+                } catch (e) {
+                    console.error("Fallback also failed", e);
+                }
             } finally {
                 setLoading(false);
             }
@@ -27,6 +35,12 @@ const PropertyDetailsPage = () => {
 
     if (loading) return <div style={{ background: 'var(--color-primary)', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Loading Details...</div>;
     if (!property) return <div style={{ background: 'var(--color-primary)', height: '100vh', padding: '5rem', color: 'white' }}>Property not found</div>;
+
+    // Handle database field structures
+    const imageUrl = property.image || (property.images && property.images[0]) || 'https://via.placeholder.com/800x600?text=No+Image';
+    const locationText = property.location || (property.address && `${property.address.street || ''}, ${property.address.city || ''}`) || 'Location N/A';
+    const priceText = property.price || property.rentPrice || 'Price N/A';
+    const typeText = property.type || (property.isForSale ? 'For Sale' : 'For Rent');
 
     return (
         <div style={{ background: 'var(--color-primary)', minHeight: '100vh', color: 'var(--color-text-main)' }}>
@@ -43,18 +57,18 @@ const PropertyDetailsPage = () => {
 
                 {/* Image Gallery (Hero) */}
                 <div style={{ height: '60vh', borderRadius: '12px', overflow: 'hidden', marginBottom: '3rem', position: 'relative' }}>
-                    <img src={property.image} alt={property.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={imageUrl} alt={property.title || 'Property'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '2rem', background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                             <div>
-                                <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{property.title}</h1>
+                                <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{property.title || 'Untitled Property'}</h1>
                                 <p style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-light)' }}>
-                                    <FaMapMarkerAlt className="text-accent" /> {property.location}
+                                    <FaMapMarkerAlt className="text-accent" /> {locationText}
                                 </p>
                             </div>
                             <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-accent)' }}>{property.price}</div>
-                                <div style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>{property.type}</div>
+                                <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--color-accent)' }}>{priceText}</div>
+                                <div style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>{typeText}</div>
                             </div>
                         </div>
                     </div>

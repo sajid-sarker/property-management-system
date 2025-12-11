@@ -1,14 +1,16 @@
 import axios from 'axios';
 
-// Create an Axios instance with default config
+// API base URL - Backend runs on port 5000
+const API_URL = 'http://localhost:5000/api';
+
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api', // Standard MERN backend port
+    baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Add a request interceptor for JWT token (if auth is involved later)
+// Add JWT token to requests if available
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -20,101 +22,160 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// API Service Methods
+// ============ PROPERTY SERVICE ============
 export const propertyService = {
-    getAll: async () => {
-        // In a real app: return api.get('/properties');
-        // Using mock data for demo since backend might not be running
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    data: [
-                        {
-                            id: 1,
-                            title: "Midnight Villa",
-                            location: "Beverly Hills, CA",
-                            price: "$14,500,000",
-                            type: "For Sale",
-                            beds: 6,
-                            baths: 7,
-                            sqft: "8,500 sqft",
-                            image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2670&auto=format&fit=crop"
-                        },
-                        {
-                            id: 2,
-                            title: "Obsidian Heights",
-                            location: "New York, NY",
-                            price: "$22,000/mo",
-                            type: "For Rent",
-                            beds: 3,
-                            baths: 3,
-                            sqft: "2,800 sqft",
-                            image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                        },
-                        {
-                            id: 3,
-                            title: "Gold Coast Penthouse",
-                            location: "Chicago, IL",
-                            price: "$5,200,000",
-                            type: "For Sale",
-                            beds: 4,
-                            baths: 4,
-                            sqft: "4,200 sqft",
-                            image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                        }
-                    ]
-                });
-            }, 500);
-        });
+    // Get all properties from database
+    getAll: () => api.get('/properties'),
+
+    // Get single property by ID
+    getById: (id) => api.get(`/properties/${id}`),
+
+    // Create new property
+    create: (data) => {
+        // Transform frontend data to match backend schema
+        const payload = {
+            title: data.title,
+            description: data.description || 'No description provided',
+            type: data.type,
+            location: data.location,
+            address: {
+                street: data.location || '',
+                city: data.city || 'Unknown',
+                state: data.state || 'Unknown',
+                country: data.country || 'Unknown'
+            },
+            beds: parseInt(data.beds) || 0,
+            baths: parseInt(data.baths) || 0,
+            sqft: data.sqft,
+            price: data.price,
+            images: data.image ? [data.image] : data.images || [],
+            image: data.image || (data.images && data.images[0]) || '',
+            isBoosted: data.isBoosted || false,
+            isForSale: data.type === 'For Sale',
+            isForRent: data.type === 'For Rent'
+        };
+        return api.post('/properties', payload);
     },
 
-    getById: (id) => api.get(`/properties/${id}`),
-    create: (data) => {
-        // Mock creation
-        console.log("Mock Create Property:", data);
-        return Promise.resolve({ data: { id: Math.floor(Math.random() * 1000), ...data } });
-    },
+    // Place a bid on a property (for buyers)
+    placeBid: (propertyId, bidData) => api.post(`/properties/${propertyId}/bid`, bidData),
+
+    // Add a review to a property (for renters)
+    addReview: (propertyId, reviewData) => api.post(`/properties/${propertyId}/review`, reviewData),
 };
 
-export const wishlistService = {
-    getAll: async () => {
-        // Mock wishlist data (subset of properties)
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    data: [
-                        {
-                            id: 1,
-                            title: "Midnight Villa",
-                            location: "Beverly Hills, CA",
-                            price: "$14,500,000",
-                            type: "For Sale",
-                            beds: 6,
-                            baths: 7,
-                            sqft: "8,500 sqft",
-                            image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2670&auto=format&fit=crop"
-                        }
-                    ]
-                });
-            }, 500);
-        });
+// ============ AUTH SERVICE ============
+export const authService = {
+    // Login user
+    login: async (credentials) => {
+        const response = await api.post('/users/login', credentials);
+        if (response.data) {
+            localStorage.setItem('user', JSON.stringify(response.data));
+        }
+        return response;
     },
-    add: (propertyId) => {
-        console.log("Mock Add to Wishlist:", propertyId);
-        return Promise.resolve({ data: { success: true } });
+
+    // Register new user
+    register: async (userData) => {
+        // Map frontend role values to backend enum
+        const roleMap = {
+            'tenant': 'tenant',
+            'landlord': 'landlord',
+            'agent': 'agent',
+            'company': 'company'
+        };
+
+        const payload = {
+            name: userData.name,
+            email: userData.email,
+            password: userData.password,
+            role: roleMap[userData.role] || 'general'
+        };
+
+        const response = await api.post('/users/register', payload);
+        if (response.data) {
+            localStorage.setItem('user', JSON.stringify(response.data));
+        }
+        return response;
     },
-    remove: (propertyId) => {
-        console.log("Mock Remove from Wishlist:", propertyId);
-        return Promise.resolve({ data: { success: true } });
+
+    // Get user profile
+    getProfile: (userId) => api.get(`/users/profile/${userId}`),
+
+    // Update user profile
+    updateProfile: (userId, data) => api.put(`/users/profile/${userId}`, data),
+
+    // Logout
+    logout: () => {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+    },
+
+    // Get current user from localStorage
+    getCurrentUser: () => {
+        const user = localStorage.getItem('user');
+        return user ? JSON.parse(user) : null;
     }
 };
 
-export const authService = {
-    login: (credentials) => api.post('/auth/login', credentials),
-    register: (userData) => api.post('/auth/register', userData),
-    logout: () => {
-        localStorage.removeItem('token');
+// ============ PROJECT SERVICE (Development Requests) ============
+export const projectService = {
+    // Get all development projects
+    getAll: () => api.get('/projects'),
+
+    // Create new project
+    create: (data) => api.post('/projects', data),
+
+    // Place bid on a project (for companies)
+    placeBid: (projectId, bidData) => api.post(`/projects/${projectId}/bid`, bidData)
+};
+
+// ============ WISHLIST SERVICE ============
+// Using localStorage for wishlist as it's user-specific client-side storage
+export const wishlistService = {
+    getAll: () => {
+        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        return Promise.resolve({ data: wishlist });
     },
+
+    add: (property) => {
+        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        // Avoid duplicates
+        const exists = wishlist.find(p =>
+            p._id === property._id ||
+            p.propertyId === property.propertyId ||
+            p.id === property.id
+        );
+        if (!exists) {
+            wishlist.push(property);
+            localStorage.setItem('wishlist', JSON.stringify(wishlist));
+        }
+        return Promise.resolve({ data: property });
+    },
+
+    remove: (propertyId) => {
+        let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        wishlist = wishlist.filter(p =>
+            p._id !== propertyId &&
+            p.propertyId !== propertyId &&
+            p.id !== propertyId
+        );
+        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+        return Promise.resolve({ data: { success: true } });
+    },
+
+    // Update notes for a wishlist item
+    updateNotes: (propertyId, notes) => {
+        let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        wishlist = wishlist.map(p => {
+            if (p._id === propertyId || p.propertyId === propertyId || p.id === propertyId) {
+                return { ...p, notes };
+            }
+            return p;
+        });
+        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+        return Promise.resolve({ data: { success: true } });
+    }
 };
 
 export default api;
