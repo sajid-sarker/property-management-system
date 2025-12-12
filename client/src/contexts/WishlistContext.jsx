@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import { wishlistService } from "../services/api";
+import { wishlistService } from "../services/api.js";
 
 const WishlistContext = createContext(null);
 
