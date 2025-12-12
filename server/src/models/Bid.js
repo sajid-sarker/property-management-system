@@ -39,5 +39,6 @@ bidSchema.plugin(autoIncrement, {
   padLength: 6,
 });
 
-Bid = mongoose.model("Bid", bidSchema);
+const Bid = mongoose.model("Bid", bidSchema);
+
 export default Bid;

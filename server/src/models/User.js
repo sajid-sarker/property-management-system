@@ -76,4 +76,5 @@ userSchema.plugin(autoIncrement, {
 
 // Creation of the model based on above schema
 const User = mongoose.model("User", userSchema);
+
 export default User;
