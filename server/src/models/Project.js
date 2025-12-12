@@ -30,13 +30,14 @@ const projectSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-Project = mongoose.model("Project", projectSchema);
 
 projectSchema.plugin(autoIncrement, {
-  model: "Project",
-  field: "projectId",
-  prefix: "PROJ-",
-  padLength: 6,
+    model: "Project",
+    field: "projectId",
+    prefix: "PROJ-",
+    padLength: 6,
 });
+
+const Project = mongoose.model("Project", projectSchema);
 
 export default Project;

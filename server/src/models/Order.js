@@ -51,5 +51,6 @@ orderSchema.plugin(autoIncrement, {
   padLength: 6,
 });
 
-Order = mongoose.model("Order", orderSchema);
+const Order = mongoose.model("Order", orderSchema);
+
 export default Order;

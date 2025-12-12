@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import autoIncrement from "../utils/autoIncrement.js";
 
-const autoIncrement = require("../utils/autoIncrement.js");
 // Main user class. Others will inherit
 const propertySchema = new mongoose.Schema(
   {
@@ -18,11 +17,14 @@ const propertySchema = new mongoose.Schema(
       enum: ["house", "apartment", "land", "commercial"],
     },
     address: {
-      street: String,
-      city: String,
-      state: String,
-      country: String,
-      required: true,
+      type: {
+        // Define the structure *inside* a 'type' property
+        street: { type: String, required: true },
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        country: { type: String, required: true },
+      },
+      required: true, // This makes the entire 'address' field required
     },
 
     landlord: {
