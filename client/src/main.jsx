@@ -1,7 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
 import App from "./App.jsx";
+import { Provider } from "@/components/ui/provider";
+import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { WishlistProvider } from "./contexts/WishlistContext.jsx";
 
@@ -9,7 +10,13 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>
       <WishlistProvider>
-        <App />
+        {/* For React Router */}
+        <BrowserRouter>
+          {/* For Chakra UI */}
+          <Provider>
+            <App />
+          </Provider>
+        </BrowserRouter>
       </WishlistProvider>
     </AuthProvider>
   </StrictMode>
