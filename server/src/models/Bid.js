@@ -6,10 +6,10 @@ const bidSchema = new mongoose.Schema(
     bidId: {
       type: String,
       unique: true,
+      required: true,
     },
 
-    amount: Number,
-    proposalText: String,
+    amount: { type: Number, required: true },
 
     company: {
       type: mongoose.Schema.Types.ObjectId,

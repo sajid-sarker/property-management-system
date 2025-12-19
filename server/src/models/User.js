@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     userId: {
       type: String,
       unique: true,
+      required: true,
     },
     name: {
       type: String,
@@ -19,6 +20,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ["general", "landlord", "company"],
+      default: "general",
       required: true,
     },
     email: {
@@ -37,6 +39,12 @@ const userSchema = new mongoose.Schema(
     description: {
       type: String,
       default: "Nothing to say",
+    },
+    // General users only
+    wishlist: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Wishlist",
+      required: true,
     },
     // For landlords (optional)
     landlordInfo: {

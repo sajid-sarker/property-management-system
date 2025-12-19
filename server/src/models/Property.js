@@ -7,6 +7,7 @@ const propertySchema = new mongoose.Schema(
     propertyId: {
       type: String,
       unique: true,
+      required: true,
     },
     description: {
       type: String,
@@ -42,17 +43,19 @@ const propertySchema = new mongoose.Schema(
       required: true,
     },
 
-    price: Number,
-    rentPrice: Number,
-    isForSale: Boolean,
-    isForRent: Boolean,
-
-    images: [String],
+    price: {
+      type: String, // Rent or sale
+      required: true,
+    },
 
     status: {
       type: String,
       enum: ["available", "sold", "rented", "pending"],
       default: "available",
+    },
+    priority: {
+      type: Number,
+      default: 1, // Boosted => higher value = higher list priority
     },
   },
   {
