@@ -1,31 +1,28 @@
 import mongoose from "mongoose";
 
-const wishlistSchema = new mongoose.Schema(
+const messageSchema = new mongoose.Schema(
   {
-    wishlistId: {
-      type: String,
-      unique: true,
-    },
-    user: {
+    sender: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+    receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     property: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Property",
-      required: true,
     },
-    notes: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Property",
-      required: true,
-      note: String,
-    },
+
+    content: { type: String, required: true },
   },
   { timestamps: true }
 );
 
-const Wishlist = mongoose.model("Wishlist", wishlistSchema);
+const Message = mongoose.model("Message", messageSchema);
 
-export default Wishlist;
+export default Message;
