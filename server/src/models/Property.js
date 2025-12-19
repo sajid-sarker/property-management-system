@@ -36,15 +36,15 @@ const propertySchema = new mongoose.Schema(
 
     averageRating: {
       type: Number,
-      required: true,
+      default: 0,
     },
     images: {
-      images: [String],
+      type: [String],
       required: true,
     },
 
     price: {
-      type: String, // Rent or sale
+      type: Number, // Rent or sale
       required: true,
     },
 
@@ -57,6 +57,28 @@ const propertySchema = new mongoose.Schema(
       type: Number,
       default: 1, // Boosted => higher value = higher list priority
     },
+    reviews: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        rating: {
+          type: Number,
+          min: 1,
+          max: 5,
+          required: true,
+        },
+        comment: {
+          type: String,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true, // createdAt, updatedAt

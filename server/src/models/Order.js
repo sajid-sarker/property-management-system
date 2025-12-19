@@ -8,6 +8,7 @@ const orderSchema = new mongoose.Schema(
     orderId: {
       type: String,
       unique: true,
+      required: true,
     },
     property: {
       type: mongoose.Schema.Types.ObjectId,
@@ -27,7 +28,7 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
-    pricePaid: Number,
+    pricePaid: { type: Number, required: true },
 
     type: {
       type: String,
