@@ -47,6 +47,10 @@ const PropertyForm = ({
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!formData.image) {
+            alert("Please upload a property image");
+            return;
+        }
         onSubmit(formData);
     };
 
@@ -211,17 +215,97 @@ const PropertyForm = ({
                     />
                 </GridItem>
 
-                {/* Image URL */}
+
+                {/* Image Upload */}
                 <GridItem>
-                    <Text {...labelStyles}>Image URL</Text>
-                    <Input
-                        name="image"
-                        value={formData.image}
-                        onChange={handleChange}
-                        placeholder="https://..."
-                        required
-                        {...inputStyles}
-                    />
+                    <Text {...labelStyles}>Property Image</Text>
+                    <Box
+                        border="1px dashed rgba(255, 255, 255, 0.1)"
+                        borderRadius="8px"
+                        p="4"
+                        textAlign="center"
+                        cursor="pointer"
+                        _hover={{ borderColor: '#d4af37' }}
+                        position="relative"
+                    >
+                        <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+
+                                const formData = new FormData();
+                                formData.append('image', file);
+
+                                try {
+                                    // You might want to move this fetch to an api service method
+                                    const res = await fetch('http://localhost:5000/api/upload', {
+                                        method: 'POST',
+                                        body: formData,
+                                    });
+                                    const data = await res.json();
+                                    
+                                    if (data.success) {
+                                        // Update form data with the full URL or relative path depending on your requirement
+                                        // If backend returns relative path, prepend base URL if needed or store as is
+                                        // Here we assume backend returns relative path /uploads/...
+                                        // And we'll store the full URL for display if needed, or just path.
+                                        // The Property model expects an array of strings for images.
+                                        // But the form state seems to handle 'image' as a single string initially based on the code I viewed.
+                                        // Let's check how 'image' is used.
+                                        // initialData.image || '' in useState.
+                                        
+                                        // Let's prepend generic localhost for now if it's a relative path, or just use what backend sends
+                                        // The backend sends `/uploads/filename`
+                                        const imageUrl = `http://localhost:5000${data.data}`;
+                                        
+                                        // For now, setting it as string. 
+                                        // NOTE: The previous code had "Image URL" input mapping to formData.image.
+                                        // If the API expects an array, I should probably handle that in submit or here.
+                                        // The existing handleSubmit just calls onSubmit(formData).
+                                        // I will match the existing behavior: formData.image holds the string URL.
+                                        setFormData((prev) => ({ ...prev, image: imageUrl }));
+                                    } else {
+                                        alert('Upload failed');
+                                    }
+                                } catch (error) {
+                                    console.error('Upload error:', error);
+                                    alert('Upload error');
+                                }
+                            }}
+                            opacity="0"
+                            position="absolute"
+                            top="0"
+                            left="0"
+                            width="100%"
+                            height="100%"
+                            cursor="pointer"
+                        />
+                        {formData.image ? (
+                            <Box mt="2" position="relative">
+                                {/* Preview the uploaded image */}
+                                <img 
+                                    src={formData.image} 
+                                    alt="Property" 
+                                    style={{ 
+                                        maxHeight: '150px', 
+                                        margin: '0 auto', 
+                                        borderRadius: '4px',
+                                        objectFit: 'cover'
+                                    }} 
+                                />
+                                <Text fontSize="xs" color="green.400" mt="2">Image Uploaded!</Text>
+                            </Box>
+                        ) : (
+                            <VStack spacing="2" py="6">
+                                <Icon as={FaRocket} boxSize="8" color="#6a6a6a" />
+                                <Text color="#a0a0a0" fontSize="sm">
+                                    Click or Drag to Upload Image
+                                </Text>
+                            </VStack>
+                        )}
+                    </Box>
                 </GridItem>
 
                 {/* Description - Full Width */}

@@ -24,6 +24,13 @@ app.use(express.json()); // Allows us to use JSON data in req.body
 // API Routes
 app.use("/api/properties", propertyRoutes);
 app.use("/api/boosts", boostRoutes);
+app.use("/api/upload", uploadRoutes);
+
+// Make the uploads folder static
+import path from "path";
+import uploadRoutes from "./routes/uploadRoutes.js";
+const __dirname = path.resolve();
+app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
