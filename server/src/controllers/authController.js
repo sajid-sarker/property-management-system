@@ -1,109 +1,186 @@
 import User from "../models/User.js";
-import Wishlist from "../models/Wishlist.js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt"; // You'll need to install this or crypto package if not present. Defaulting to bcrypt assumption for Node but checking package.json might be wise. I will assume bcryptjs or similar is needed.
 
-// Generate JWT Token
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: "30d",
-    });
-};
+// JWT Secret (should be in .env in production)
+const JWT_SECRET = process.env.JWT_SECRET || "luxeestate_jwt_secret_key_2024";
 
-// @desc    Register new user
+// @desc    Register a new user
 // @route   POST /api/users/register
-// @access  Public
 export const registerUser = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, phoneNumber } = req.body;
 
+        // Validate required fields
         if (!name || !email || !password) {
-            return res.status(400).json({ message: "Please add all fields" });
+            return res.status(400).json({
+                success: false,
+                message: "Please provide name, email, and password",
+            });
         }
 
-        // Check if user exists
-        const userExists = await User.findOne({ email });
-
-        if (userExists) {
-            return res.status(400).json({ message: "User already exists" });
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: "User with this email already exists",
+            });
         }
-
-        // Create Wishlist for new user as required by schema
-        const wishlist = await Wishlist.create({ products: [] });
 
         // Hash password
-        // Note: Ideally use bcrypt, but for this quick fix I'll assume plain text store if bcrypt isn't in package.json, 
-        // OR BETTER: I'll use a simple hash since I can't run npm install easily without user permission.
-        // Wait, package.json had dependencies. Let me check.
-        // server/package.json had: dotenv, express, mongoose. No bcrypt.
-        // I should probably just store plain for now to make it work, or ask user to install bcrypt.
-        // BUT, the USER request is "why isn't it working", so immediate fix.
-        // I will use a simple "hash" logic or just store plain text for the PROTOTYPE fix and warn user.
-        // Actually, I can use Node's built-in crypto.
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-        // For now, storing plain text to get it working immediately (NOT SECURE - Prototype only).
-        // Or I'll assume they want me to fix the empty file.
-
-        const user = await User.create({
+        // Create new user
+        const newUser = new User({
             name,
             email,
-            password, // In real app, hash this!
+            password: hashedPassword,
             role: role || "general",
-            image: "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
-            wishlist: wishlist._id
+            phoneNumber: phoneNumber || "",
+            image: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=d4af37&color=0a0a0f`,
+            description: "New LuxeEstate member",
         });
 
-        if (user) {
-            res.status(201).json({
-                user: {
-                    _id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                },
-                token: generateToken(user._id),
-            });
-        } else {
-            res.status(400).json({ message: "Invalid user data" });
-        }
+        await newUser.save();
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: newUser._id, email: newUser.email, role: newUser.role },
+            JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // Return user data (without password)
+        const userResponse = {
+            _id: newUser._id,
+            userId: newUser.userId,
+            name: newUser.name,
+            email: newUser.email,
+            role: newUser.role,
+            image: newUser.image,
+        };
+
+        res.status(201).json({
+            success: true,
+            message: "Registration successful!",
+            token,
+            user: userResponse,
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server Error: " + error.message });
+        console.error("Registration error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Server Error",
+        });
     }
 };
 
-// @desc    Authenticate a user
+// @desc    Login user
 // @route   POST /api/users/login
-// @access  Public
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Check for user email
-        const user = await User.findOne({ email });
-
-        if (user && (user.password === password)) { // Plain text comparison for now
-            res.json({
-                user: {
-                    _id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                },
-                token: generateToken(user._id),
+        // Validate required fields
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide email and password",
             });
-        } else {
-            res.status(401).json({ message: "Invalid credentials" });
         }
+
+        // Find user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password",
+            });
+        }
+
+        // Check password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password",
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: user._id, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // Return user data (without password)
+        const userResponse = {
+            _id: user._id,
+            userId: user.userId,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            image: user.image,
+            landlordInfo: user.landlordInfo,
+            companyInfo: user.companyInfo,
+        };
+
+        res.status(200).json({
+            success: true,
+            message: "Login successful!",
+            token,
+            user: userResponse,
+        });
     } catch (error) {
-        res.status(500).json({ message: "Server Error" });
+        console.error("Login error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Server Error",
+        });
     }
 };
 
-// @desc    Get user data
+// @desc    Get current user profile
 // @route   GET /api/users/me
-// @access  Private
-export const getMe = async (req, res) => {
-    // Middleware should attach user to req
-    res.status(200).json(req.user);
-}
+export const getCurrentUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select("-password");
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+        res.status(200).json({
+            success: true,
+            user,
+        });
+    } catch (error) {
+        console.error("Get user error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
+};
+
+// @desc    Get all users (admin only)
+// @route   GET /api/users
+export const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find({}).select("-password");
+        res.status(200).json({
+            success: true,
+            data: users,
+        });
+    } catch (error) {
+        console.error("Get users error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
+};

@@ -1,0 +1,90 @@
+﻿Project Proposal
+Property Management System
+
+
+Section - 18
+Group Number - 3
+Group Members
+22299324 - Sharif Muhammad Sifat
+23101554 - Sajid Hassan Sarker
+22299238 - Raiyan Rahman
+22299405 - Shafin Ahmed
+
+
+________________
+
+
+Property Management System
+The Property Management System (PMS) is a comprehensive web application designed to simplify the process of buying, selling, and renting real estate properties. The system enables users, landlords, agents, and real estate companies to connect in one platform. It provides essential features such as property listings, property purchase, sale, rental, and development. The name was chosen because it reflects the system’s core purpose: to efficiently manage all aspects of real estate activities within a digital ecosystem.
+Project Rationale
+Background
+In Bangladesh and globally, the real estate market is fragmented and often difficult to navigate. Buyers struggle to find trustworthy listings, landlords face management difficulties, and companies lack centralized systems to handle clients efficiently. Traditional methods are time-consuming and lack transparency.
+
+
+Our project aims to address these issues by offering a centralized online platform that manages property-related transactions, user interactions, and administrative control. The system creates an opportunity for digital transformation in the real estate sector, streamlining processes and ensuring verified, accessible information for all users.
+Scope
+The Property Management System targets a broad audience, including:
+
+
+Property seekers: who want to buy or rent verified listings.
+
+
+Landlords and sellers: who want to advertise and manage their properties.
+
+
+Real estate companies: who wish to take part in developing properties.
+
+
+The system can be used locally within Bangladesh and is scalable for international adaptation. The audience size includes anyone involved in the real estate market, from individuals to corporate agents, making it highly applicable in both urban and suburban contexts.
+Project Objectives
+
+
+* Enable Real Estate Companies to Participate in Development Projects.
+* Provide General Users with Personalized Property Management Tools.
+* Facilitate Property Rental Discovery and Interaction.
+* Empower Landowners to Manage Property Sales Effectively.
+* Simplify the Property Buying Process for Buyers.
+
+
+Project Approach
+* Technology Stack: MERN Stack
+* Frontend: React.js, Tailwind CSS
+* Backend: Node.js with Express.js
+* Database: MongoDB (NoSQL)
+Requirements
+Requirement No.
+	Requirement
+	1
+	As a real estate company, I want to be able to bid on development requests.
+	Feature 1: The system will allow the company to view available requests for development
+	Feature 2: The system allows companies to submit bids with estimated cost, timeline, and proposal details for a selected project.
+	Feature 3: The system will allow companies to modify or withdraw their bids before the submission deadline.
+	Feature 4: The system will allow companies to view other bids on projects
+	2
+	As a general user, I want to keep track of interesting properties.
+	Feature 1: The system allows the user to add properties to their wishlist
+	Feature 2: The system allows the user to customize their profiles with a picture and a short description
+	Feature 3: The system provides a notification to the user when any property on their wishlist has a change in price.
+	Feature 4: The system allows the user to write their own notes about properties in their wishlist.
+	3
+	As a user, I want to be able to find rental properties
+	Feature 1: The system allows users to search for rental housing
+	Feature 2: The system can filter by rent, location, rating, etc.
+	Feature 3: The system allows prospective renters to message the owner
+	Feature 4: The system shows reviews from previous tenants for the property
+	4
+	As a landowner, I want to sell or rent out my property
+	Feature 1: The system allows the user to upload pictures of the property
+	Feature 2: The system shows similar listings based on keyword or area.
+	Feature 3: The system provides notifications when a buyer/renter is interested.
+	Feature 4: The system allows landlords to boost their property listing via payment to the platform
+	5
+	As a buyer, I want to be able to buy a property
+	Feature 1: The system allows the buyer to bid on properties
+	Feature 2: The system lists properties with a starting price, picture, and other significant data
+	Feature 3: The system allows filtering of available properties by price range, location
+	Feature 4: The system provides messaging facilities between buyer and seller.
+	
+
+Conclusion
+The Property Management System will revolutionize the way users interact within the real estate market by introducing automation, security, and simplicity into the process. It not only addresses existing inefficiencies but also creates opportunities for a more transparent and data-driven real estate ecosystem. With the use of modern web technologies and a modular MVC structure, this project ensures both scalability and long-term sustainability.

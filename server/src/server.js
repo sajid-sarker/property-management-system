@@ -3,17 +3,36 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { connectDB } from "./config/db.js";
 import propertyRoutes from "./routes/propertyRoutes.js";
+import boostRoutes from "./routes/boostRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
+// CORS middleware for frontend communication
 app.use(cors());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(express.json()); // Allows us to use JSON data in req.body
 
+// API Routes
+app.use("/api/users", authRoutes);  // Auth routes (login, register)
 app.use("/api/properties", propertyRoutes);
-app.use("/api/users", authRoutes);
+app.use("/api/boosts", boostRoutes);
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", message: "Server is running" });
+});
 
 app.listen(5000, () => {
   connectDB();

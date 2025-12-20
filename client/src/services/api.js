@@ -71,8 +71,11 @@ export const authService = {
   // Login user
   login: async (credentials) => {
     const response = await api.post("/users/login", credentials);
-    if (response.data) {
-      localStorage.setItem("user", JSON.stringify(response.data));
+    if (response.data && response.data.token) {
+      // Store token separately for auth header
+      localStorage.setItem("token", response.data.token);
+      // Store user data
+      localStorage.setItem("user", JSON.stringify(response.data.user || response.data));
     }
     return response;
   },
@@ -81,9 +84,9 @@ export const authService = {
   register: async (userData) => {
     // Map frontend role values to backend enum
     const roleMap = {
-      tenant: "tenant",
+      tenant: "general",
       landlord: "landlord",
-      agent: "agent",
+      agent: "landlord",
       company: "company",
     };
 
@@ -95,8 +98,11 @@ export const authService = {
     };
 
     const response = await api.post("/users/register", payload);
-    if (response.data) {
-      localStorage.setItem("user", JSON.stringify(response.data));
+    if (response.data && response.data.token) {
+      // Store token separately for auth header
+      localStorage.setItem("token", response.data.token);
+      // Store user data
+      localStorage.setItem("user", JSON.stringify(response.data.user || response.data));
     }
     return response;
   },
@@ -185,6 +191,31 @@ export const wishlistService = {
     localStorage.setItem("wishlist", JSON.stringify(wishlist));
     return Promise.resolve({ data: { success: true } });
   },
+};
+
+// ============ BOOST SERVICE ============
+export const boostService = {
+  // Get boost pricing options
+  getPricing: () => api.get("/boosts/pricing"),
+
+  // Create a new boost for a property
+  createBoost: (propertyId, landlordId, duration, amount, paymentMethod = "card") =>
+    api.post("/boosts", {
+      propertyId,
+      landlordId,
+      duration,
+      amount,
+      paymentMethod,
+    }),
+
+  // Get all boosts for a landlord
+  getMyBoosts: (landlordId) => api.get(`/boosts/landlord/${landlordId}`),
+
+  // Get all active boosts
+  getActiveBoosts: () => api.get("/boosts/active"),
+
+  // Cancel a boost
+  cancelBoost: (boostId) => api.delete(`/boosts/${boostId}`),
 };
 
 export default api;
