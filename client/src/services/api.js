@@ -71,8 +71,11 @@ export const authService = {
   // Login user
   login: async (credentials) => {
     const response = await api.post("/users/login", credentials);
-    if (response.data) {
-      localStorage.setItem("user", JSON.stringify(response.data));
+    if (response.data && response.data.token) {
+      // Store token separately for auth header
+      localStorage.setItem("token", response.data.token);
+      // Store user data
+      localStorage.setItem("user", JSON.stringify(response.data.user || response.data));
     }
     return response;
   },
@@ -81,9 +84,9 @@ export const authService = {
   register: async (userData) => {
     // Map frontend role values to backend enum
     const roleMap = {
-      tenant: "tenant",
+      tenant: "general",
       landlord: "landlord",
-      agent: "agent",
+      agent: "landlord",
       company: "company",
     };
 
@@ -95,8 +98,11 @@ export const authService = {
     };
 
     const response = await api.post("/users/register", payload);
-    if (response.data) {
-      localStorage.setItem("user", JSON.stringify(response.data));
+    if (response.data && response.data.token) {
+      // Store token separately for auth header
+      localStorage.setItem("token", response.data.token);
+      // Store user data
+      localStorage.setItem("user", JSON.stringify(response.data.user || response.data));
     }
     return response;
   },

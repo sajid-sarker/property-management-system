@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import propertyRoutes from "./routes/propertyRoutes.js";
 import boostRoutes from "./routes/boostRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
 app.use(express.json()); // Allows us to use JSON data in req.body
 
 // API Routes
+app.use("/api/users", authRoutes);  // Auth routes (login, register)
 app.use("/api/properties", propertyRoutes);
 app.use("/api/boosts", boostRoutes);
 
