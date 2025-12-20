@@ -10,6 +10,8 @@ import {
   FaBuilding,
   FaComments,
   FaBell,
+  FaRocket,
+  FaListAlt,
 } from "react-icons/fa";
 import { authService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -18,6 +20,9 @@ const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Determine if user is a landlord
+  const isLandlord = user?.role === 'landlord' || user?.role === 'agent';
 
   const handleLogout = () => {
     authService.logout();
@@ -79,24 +84,50 @@ const Dashboard = () => {
             active={activeTab === "overview"}
             onClick={() => setActiveTab("overview")}
           />
-          <SidebarItem
-            icon={<FaHome />}
-            label="My Properties"
-            active={activeTab === "properties"}
-            onClick={() => (window.location.href = "/properties")}
-          />
-          <SidebarItem
-            icon={<FaBuilding />}
-            label="Dev Requests"
-            active={activeTab === "dev-requests"}
-            onClick={() => (window.location.href = "/development-requests")}
-          />
-          <SidebarItem
-            icon={<FaHeart />}
-            label="Wishlist"
-            active={activeTab === "wishlist"}
-            onClick={() => (window.location.href = "/wishlist")}
-          />
+
+          {/* Landlord-specific menu items */}
+          {isLandlord && (
+            <>
+              <SidebarItem
+                icon={<FaHome />}
+                label="My Properties"
+                active={activeTab === "properties"}
+                onClick={() => navigate("/properties")}
+              />
+              <SidebarItem
+                icon={<FaPlus />}
+                label="Add Property"
+                active={activeTab === "add-property"}
+                onClick={() => navigate("/add-property")}
+              />
+              <SidebarItem
+                icon={<FaRocket />}
+                label="Boosted Listings"
+                active={activeTab === "boosted"}
+                onClick={() => setActiveTab("boosted")}
+              />
+            </>
+          )}
+
+          {/* General user menu items */}
+          {!isLandlord && (
+            <>
+              <SidebarItem
+                icon={<FaHome />}
+                label="Browse Properties"
+                active={activeTab === "browse"}
+                onClick={() => navigate("/properties")}
+              />
+              <SidebarItem
+                icon={<FaHeart />}
+                label="Wishlist"
+                active={activeTab === "wishlist"}
+                onClick={() => setActiveTab("wishlist")}
+              />
+            </>
+          )}
+
+          {/* Common menu items */}
           <SidebarItem
             icon={<FaComments />}
             label="Messages"
@@ -144,10 +175,37 @@ const Dashboard = () => {
         >
           <h1 style={{ fontFamily: "var(--font-heading)", color: "white" }}>
             Welcome back, <span className="text-accent">{user?.name || 'User'}</span>
+            <span style={{
+              fontSize: '0.9rem',
+              background: 'var(--color-accent)',
+              color: 'var(--color-primary)',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '20px',
+              marginLeft: '1rem',
+              fontFamily: 'var(--font-body)',
+              fontWeight: '600'
+            }}>
+              {isLandlord ? 'Landlord' : 'Member'}
+            </span>
           </h1>
-          <button className="btn btn-primary" style={{ gap: "0.5rem" }}>
-            <FaPlus size={12} /> List New Property
-          </button>
+          {isLandlord && (
+            <button
+              className="btn btn-primary"
+              style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
+              onClick={() => navigate('/add-property')}
+            >
+              <FaPlus size={12} /> List New Property
+            </button>
+          )}
+          {!isLandlord && (
+            <button
+              className="btn btn-primary"
+              style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
+              onClick={() => navigate('/properties')}
+            >
+              <FaHome size={12} /> Browse Properties
+            </button>
+          )}
         </header>
 
         {/* Dashboard Stats */}
@@ -159,9 +217,19 @@ const Dashboard = () => {
             marginBottom: "3rem",
           }}
         >
-          <StatCard number="12" label="Properties Viewed" />
-          <StatCard number="5" label="Saved Listings" />
-          <StatCard number="2" label="Scheduled Visits" />
+          {isLandlord ? (
+            <>
+              <StatCard number="3" label="Listed Properties" />
+              <StatCard number="2" label="Boosted Listings" />
+              <StatCard number="8" label="Interested Buyers" />
+            </>
+          ) : (
+            <>
+              <StatCard number="12" label="Properties Viewed" />
+              <StatCard number="5" label="Saved Listings" />
+              <StatCard number="2" label="Scheduled Visits" />
+            </>
+          )}
         </div>
 
         {/* Recent Activity Section */}
