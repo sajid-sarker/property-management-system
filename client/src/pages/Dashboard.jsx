@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaUser,
   FaHome,
@@ -21,8 +21,29 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     authService.logout();
-    window.location.href = "/login";
+    navigate("/login");
   };
+
+  // If no user, redirect to login
+  if (!user) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--color-primary)',
+        color: 'white'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <h2>Please log in to access the dashboard</h2>
+          <Link to="/login" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-block' }}>
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -122,7 +143,7 @@ const Dashboard = () => {
           }}
         >
           <h1 style={{ fontFamily: "var(--font-heading)", color: "white" }}>
-            Welcome back, <span className="text-accent">User</span>
+            Welcome back, <span className="text-accent">{user?.name || 'User'}</span>
           </h1>
           <button className="btn btn-primary" style={{ gap: "0.5rem" }}>
             <FaPlus size={12} /> List New Property

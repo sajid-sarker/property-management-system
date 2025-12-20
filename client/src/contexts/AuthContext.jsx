@@ -12,11 +12,17 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const response = await authService.getCurrentUser();
-          setUser(response.data);
+          // getCurrentUser returns the parsed user object directly from localStorage
+          const storedUser = authService.getCurrentUser();
+          if (storedUser && storedUser.user) {
+            setUser(storedUser.user);
+          } else if (storedUser) {
+            setUser(storedUser);
+          }
         } catch (error) {
           console.error("Failed to fetch user", error);
           localStorage.removeItem("token");
+          localStorage.removeItem("user");
         }
       }
       setLoading(false);
