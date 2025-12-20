@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { Box, Grid, Flex, Text, Heading, HStack } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { propertyService } from '../services/api';
-import { FaSearch, FaFilter, FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
 
+// Import reusable components
+import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
+import Button from '../components/common/Button';
+import PropertyCard from '../components/properties/PropertyCard';
+
+/**
+ * Properties Page
+ * Displays all property listings with filtering
+ * Uses reusable components: Navbar, Footer, Button, PropertyCard
+ */
 const Properties = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -13,9 +23,12 @@ const Properties = () => {
         const fetchProperties = async () => {
             try {
                 const response = await propertyService.getAll();
-                setProperties(response.data);
+                // Handle both { success: true, data: [...] } and direct array responses
+                const data = response.data?.data || response.data || [];
+                setProperties(Array.isArray(data) ? data : []);
             } catch (error) {
-                console.error("Failed to fetch properties", error);
+                console.error('Failed to fetch properties', error);
+                setProperties([]);
             } finally {
                 setLoading(false);
             }
@@ -23,144 +36,134 @@ const Properties = () => {
         fetchProperties();
     }, []);
 
-    // Navbar reusable component (simplified for internal pages)
-    const Navbar = () => (
-        <nav className="navbar scrolled">
-            <div className="container nav-content">
-                <Link to="/" className="logo">Luxe<span className="text-accent">Estate</span></Link>
-                <div className="nav-links hidden-mobile">
-                    <Link to="/" className="nav-link">Home</Link>
-                    <Link to="/properties" className="nav-link text-accent">Residences</Link>
-                    <Link to="/contact" className="nav-link">Contact</Link>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <Link to="/login"><button className="btn btn-primary" style={{ fontSize: '0.875rem', padding: '0.5rem 1.5rem' }}>Login</button></Link>
-                </div>
-            </div>
-        </nav>
-    );
+    // Filter properties based on selection
+    const filteredProperties = properties.filter((p) => {
+        if (filter === 'all') return true;
+        const propType = (p.type || '').toLowerCase();
+        if (filter === 'sale') return propType.includes('sale') || p.isForSale;
+        if (filter === 'rent') return propType.includes('rent') || p.isForRent;
+        return true;
+    });
 
     return (
-        <div style={{ background: 'var(--color-primary)', minHeight: '100vh', color: 'white' }}>
-            <Navbar />
+        <Box bg="#0a0a0f" minH="100vh" color="white">
+            {/* Reusable Navbar Component */}
+            <Navbar variant="solid" />
 
-            <div className="container" style={{ paddingTop: '8rem', paddingBottom: '4rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem', flexWrap: 'wrap', gap: '2rem' }}>
-                    <div>
-                        <h1 style={{ fontSize: '3rem', fontFamily: 'var(--font-heading)' }}>Exclusive <span className="text-accent">Collection</span></h1>
-                        <p style={{ color: 'var(--color-text-light)' }}>Discover our handpicked selection of premium properties.</p>
-                    </div>
+            {/* Main Content */}
+            <Box className="container" pt="32" pb="16" px="6" maxW="1400px" mx="auto">
+                {/* Page Header */}
+                <Flex
+                    justify="space-between"
+                    align="center"
+                    mb="12"
+                    flexWrap="wrap"
+                    gap="8"
+                >
+                    <Box>
+                        <Heading
+                            fontFamily="'Playfair Display', serif"
+                            fontSize={{ base: '2rem', md: '3rem' }}
+                            fontWeight="600"
+                            mb="2"
+                        >
+                            Exclusive <Text as="span" color="#d4af37">Collection</Text>
+                        </Heading>
+                        <Text color="#a0a0a0">
+                            Discover our handpicked selection of premium properties.
+                        </Text>
+                    </Box>
 
-                    <div style={{ display: 'flex', gap: '1rem', background: 'var(--color-primary-light)', padding: '0.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button
-                            onClick={() => setFilter('all')}
-                            style={{
-                                ...filterBtnStyle,
-                                background: filter === 'all' ? 'var(--color-accent)' : 'transparent',
-                                color: filter === 'all' ? 'var(--color-primary)' : 'var(--color-text-light)'
-                            }}
-                        >All</button>
-                        <button
-                            onClick={() => setFilter('sale')}
-                            style={{
-                                ...filterBtnStyle,
-                                background: filter === 'sale' ? 'var(--color-accent)' : 'transparent',
-                                color: filter === 'sale' ? 'var(--color-primary)' : 'var(--color-text-light)'
-                            }}
-                        >For Sale</button>
-                        <button
-                            onClick={() => setFilter('rent')}
-                            style={{
-                                ...filterBtnStyle,
-                                background: filter === 'rent' ? 'var(--color-accent)' : 'transparent',
-                                color: filter === 'rent' ? 'var(--color-primary)' : 'var(--color-text-light)'
-                            }}
-                        >For Rent</button>
-                    </div>
-                </div>
-
-                {loading ? (
-                    <div style={{ textAlign: 'center', padding: '4rem' }}>Loading properties...</div>
-                ) : (
-                    <motion.div
-                        layout
-                        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2.5rem' }}
+                    {/* Filter Buttons */}
+                    <HStack
+                        gap="1"
+                        bg="#14141f"
+                        p="2"
+                        borderRadius="10px"
+                        border="1px solid rgba(255, 255, 255, 0.05)"
                     >
-                        <AnimatePresence>
-                            {properties
-                                .filter(p => {
-                                    if (filter === 'all') return true;
-                                    const propType = (p.type || '').toLowerCase();
-                                    if (filter === 'sale') return propType.includes('sale') || p.isForSale;
-                                    if (filter === 'rent') return propType.includes('rent') || p.isForRent;
-                                    return true;
-                                })
-                                .map((prop) => (
-                                    <PropertyCard key={prop._id || prop.propertyId || prop.id} data={prop} />
+                        <FilterButton
+                            active={filter === 'all'}
+                            onClick={() => setFilter('all')}
+                        >
+                            All
+                        </FilterButton>
+                        <FilterButton
+                            active={filter === 'sale'}
+                            onClick={() => setFilter('sale')}
+                        >
+                            For Sale
+                        </FilterButton>
+                        <FilterButton
+                            active={filter === 'rent'}
+                            onClick={() => setFilter('rent')}
+                        >
+                            For Rent
+                        </FilterButton>
+                    </HStack>
+                </Flex>
+
+                {/* Property Grid */}
+                {loading ? (
+                    <Box textAlign="center" py="16">
+                        <Text color="#a0a0a0" fontSize="lg">Loading properties...</Text>
+                    </Box>
+                ) : filteredProperties.length === 0 ? (
+                    <Box textAlign="center" py="16">
+                        <Text color="#a0a0a0" fontSize="lg">No properties found.</Text>
+                    </Box>
+                ) : (
+                    <motion.div layout>
+                        <Grid
+                            templateColumns={{
+                                base: '1fr',
+                                md: 'repeat(2, 1fr)',
+                                lg: 'repeat(3, 1fr)',
+                            }}
+                            gap="8"
+                        >
+                            <AnimatePresence>
+                                {filteredProperties.map((prop, index) => (
+                                    <PropertyCard
+                                        key={prop._id || prop.propertyId || prop.id}
+                                        data={prop}
+                                        index={index}
+                                    />
                                 ))}
-                        </AnimatePresence>
+                            </AnimatePresence>
+                        </Grid>
                     </motion.div>
                 )}
-            </div>
-        </div>
+            </Box>
+
+            {/* Reusable Footer Component */}
+            <Footer />
+        </Box>
     );
 };
 
-const PropertyCard = ({ data }) => {
-    // Handle both database and mock data formats
-    const propertyId = data._id || data.propertyId || data.id;
-    const imageUrl = data.image || (data.images && data.images[0]) || 'https://via.placeholder.com/400x300?text=No+Image';
-    const locationText = data.location || (data.address && `${data.address.city || ''}, ${data.address.state || ''}`) || 'Location N/A';
-
-    return (
-        <motion.div
-            layout
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            whileHover={{ y: -10 }}
-            style={{ background: 'var(--color-primary-light)', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', display: 'block' }}
-        >
-            <Link to={`/properties/${propertyId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ height: '280px', overflow: 'hidden', position: 'relative' }}>
-                    <img src={imageUrl} alt={data.title || 'Property'} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} />
-                    <div style={{
-                        position: 'absolute', top: '1rem', right: '1rem',
-                        background: 'rgba(212, 175, 55, 0.9)',
-                        color: 'var(--color-primary)',
-                        padding: '0.25rem 0.75rem',
-                        fontWeight: 700, borderRadius: '2px',
-                        fontSize: '0.8rem', textTransform: 'uppercase'
-                    }}>
-                        {data.type || (data.isForSale ? 'For Sale' : 'For Rent')}
-                    </div>
-                </div>
-                <div style={{ padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <h3 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-heading)' }}>{data.title || 'Untitled Property'}</h3>
-                        <div style={{ color: 'var(--color-accent)', fontWeight: 600 }}>{data.price || data.rentPrice || 'Price N/A'}</div>
-                    </div>
-                    <p style={{ color: 'var(--color-text-light)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-                        <FaMapMarkerAlt className="text-accent" /> {locationText}
-                    </p>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', color: 'var(--color-text-main)', fontSize: '0.9rem' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaBed className="text-accent" /> {data.beds || 0} Beds</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaBath className="text-accent" /> {data.baths || 0} Baths</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaRulerCombined className="text-accent" /> {data.sqft || 'N/A'}</span>
-                    </div>
-                </div>
-            </Link>
-        </motion.div>
-    );
-};
-
-const filterBtnStyle = {
-    padding: '0.5rem 1.5rem',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: 500,
-    transition: 'all 0.3s ease'
-};
+/**
+ * FilterButton - Local helper component for filter buttons
+ */
+const FilterButton = ({ active, onClick, children }) => (
+    <Box
+        as="button"
+        onClick={onClick}
+        px="4"
+        py="2"
+        borderRadius="6px"
+        fontWeight="600"
+        fontSize="0.9rem"
+        transition="all 0.2s ease"
+        bg={active ? '#d4af37' : 'transparent'}
+        color={active ? '#0a0a0f' : '#a0a0a0'}
+        _hover={{
+            bg: active ? '#d4af37' : 'rgba(255, 255, 255, 0.05)',
+            color: active ? '#0a0a0f' : 'white',
+        }}
+    >
+        {children}
+    </Box>
+);
 
 export default Properties;

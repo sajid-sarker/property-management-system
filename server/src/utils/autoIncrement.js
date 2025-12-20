@@ -14,28 +14,23 @@ async function getNextSequence(modelName) {
 
 /**
  * Auto-increment plugin.
- * @param {String} fieldName - The schema field that will store the ID.
- * @param {String} prefix - The prefix to prepend (e.g., "USR-", "PROP-").
- * @param {Number} padLength - Total digits to pad sequence with.
+ * @param {Object} options - Options object
+ * @param {String} options.field - The schema field that will store the ID.
+ * @param {String} options.prefix - The prefix to prepend (e.g., "USR-", "PROP-").
+ * @param {Number} options.padLength - Total digits to pad sequence with.
  */
+function autoIncrementPlugin(schema, options) {
+  const { field, prefix, padLength = 6 } = options;
 
-function autoIncrementPlugin(fieldName, prefix, padLength = 6) {
-  return function (schema) {
-    schema.pre("save", async function (next) {
-      try {
-        // Prevent regenerating ID if it already exists
-        if (!this[fieldName]) {
-          const nextId = await getNextSequence(prefix);
-          const padded = String(nextId).padStart(padLength, "0");
-
-          this[fieldName] = `${prefix}${padded}`;
-        }
-        next();
-      } catch (err) {
-        next(err);
-      }
-    });
-  };
+  // Using async/await without next() for Mongoose 8.x compatibility
+  schema.pre("save", async function () {
+    // Prevent regenerating ID if it already exists
+    if (!this[field]) {
+      const nextId = await getNextSequence(prefix);
+      const padded = String(nextId).padStart(padLength, "0");
+      this[field] = `${prefix}${padded}`;
+    }
+  });
 }
 
 export default autoIncrementPlugin;
