@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
     setUser(user);
+    return user;
   };
 
   const register = async (userData) => {
@@ -48,6 +49,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
     setUser(user);
+    return user;
   };
 
   const logout = () => {
