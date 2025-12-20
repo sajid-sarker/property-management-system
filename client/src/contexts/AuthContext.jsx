@@ -12,8 +12,15 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const response = await authService.getCurrentUser();
-          setUser(response.data);
+          // getCurrentUser returns the user object directly from localStorage (synchronous)
+          const storedUser = authService.getCurrentUser();
+          if (storedUser) {
+            setUser(storedUser);
+          } else {
+            // If we have a token but no user info, we might want to fetch profile or clear token
+            // For now, let's assume if user is missing from local storage, session is invalid
+            localStorage.removeItem("token");
+          }
         } catch (error) {
           console.error("Failed to fetch user", error);
           localStorage.removeItem("token");
