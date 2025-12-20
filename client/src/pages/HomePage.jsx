@@ -30,9 +30,12 @@ const HomePage = () => {
     const fetchProperties = async () => {
       try {
         const response = await propertyService.getAll();
-        setProperties(response.data);
+        // Handle API response format: { success: true, data: [...] }
+        const propertiesData = response.data?.data || response.data || [];
+        setProperties(Array.isArray(propertiesData) ? propertiesData : []);
       } catch (error) {
         console.error("Failed to fetch properties", error);
+        setProperties([]);
       } finally {
         setLoading(false);
       }
@@ -299,7 +302,7 @@ const HomePage = () => {
               }}
             >
               {properties.map((prop, idx) => (
-                <PropertyCard key={prop.id} data={prop} index={idx} />
+                <PropertyCard key={prop._id || prop.id || idx} data={prop} index={idx} />
               ))}
             </div>
           )}
