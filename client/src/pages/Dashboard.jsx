@@ -10,6 +10,8 @@ import {
   FaBuilding,
   FaComments,
   FaBell,
+  FaRocket,
+  FaListAlt,
 } from "react-icons/fa";
 import { authService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -18,6 +20,9 @@ const Dashboard = () => {
   const { user, logout, loading, isLandlord, isTenant, isCompany, isAgent } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Determine if user is a landlord
+  // Determine if user is a landlord - logic moved to useAuth hook
 
   const handleLogout = () => {
     authService.logout();
@@ -95,33 +100,62 @@ const Dashboard = () => {
             onClick={() => setActiveTab("overview")}
           />
 
-          {(isLandlord() || isAgent() || isCompany()) && (
-            <SidebarItem
-              icon={<FaHome />}
-              label="My Properties"
-              active={activeTab === "properties"}
-              onClick={() => (window.location.href = "/properties")}
-            />
+          {(isLandlord() || isAgent()) && (
+            <>
+              <SidebarItem
+                icon={<FaHome />}
+                label="My Properties"
+                active={activeTab === "properties"}
+                onClick={() => navigate("/properties")}
+              />
+              <SidebarItem
+                icon={<FaPlus />}
+                label="Add Property"
+                active={activeTab === "add-property"}
+                onClick={() => navigate("/add-property")}
+              />
+              <SidebarItem
+                icon={<FaRocket />}
+                label="Boosted Listings"
+                active={activeTab === "boosted"}
+                onClick={() => setActiveTab("boosted")}
+              />
+            </>
           )}
 
           {isCompany() && (
-            <SidebarItem
-              icon={<FaBuilding />}
-              label="Dev Requests"
-              active={activeTab === "dev-requests"}
-              onClick={() => (window.location.href = "/development-requests")}
-            />
+            <>
+              <SidebarItem
+                icon={<FaHome />}
+                label="My Properties"
+                active={activeTab === "properties"}
+                onClick={() => navigate("/properties")}
+              />
+              <SidebarItem
+                icon={<FaBuilding />}
+                label="Dev Requests"
+                active={activeTab === "dev-requests"}
+                onClick={() => navigate("/development-requests")}
+              />
+            </>
           )}
 
           {isTenant() && (
-            <SidebarItem
-              icon={<FaHeart />}
-              label="Wishlist"
-              active={activeTab === "wishlist"}
-              onClick={() => (window.location.href = "/wishlist")}
-            />
+            <>
+              <SidebarItem
+                icon={<FaHeart />}
+                label="Wishlist"
+                active={activeTab === "wishlist"}
+                onClick={() => navigate("/wishlist")}
+              />
+              <SidebarItem
+                icon={<FaHome />}
+                label="Browse Properties"
+                active={activeTab === "browse"}
+                onClick={() => navigate("/properties")}
+              />
+            </>
           )}
-
           <SidebarItem
             icon={<FaComments />}
             label="Messages"
@@ -182,8 +216,21 @@ const Dashboard = () => {
             </span>
           </h1>
           {(isLandlord() || isAgent() || isCompany()) && (
-            <button className="btn btn-primary" style={{ gap: "0.5rem" }}>
+            <button
+              className="btn btn-primary"
+              style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
+              onClick={() => navigate('/add-property')}
+            >
               <FaPlus size={12} /> List New Property
+            </button>
+          )}
+          {isTenant() && (
+            <button
+              className="btn btn-primary"
+              style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
+              onClick={() => navigate('/properties')}
+            >
+              <FaHome size={12} /> Browse Properties
             </button>
           )}
         </header>
@@ -210,6 +257,7 @@ const Dashboard = () => {
               <StatCard number="3" label="Active Listings" />
               <StatCard number="28" label="Total Views" />
               <StatCard number="4" label="New Inquiries" />
+              <StatCard number="2" label="Boosted Listings" />
             </>
           )}
 

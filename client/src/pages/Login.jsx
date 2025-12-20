@@ -6,16 +6,30 @@ import { useAuth } from '../contexts/AuthContext';
 const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const { login } = useAuth();
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+        setLoading(true);
         try {
-            await login(formData);
-            navigate('/dashboard');
+            const user = await login(formData);
+
+            // Role-based redirect
+            if (user?.role === 'landlord' || user?.role === 'agent') {
+                navigate('/dashboard'); // Landlords go to dashboard
+            } else if (user?.role === 'company') {
+                navigate('/development-requests'); // Companies go to dev requests
+            } else {
+                navigate('/properties'); // General users go to browse properties
+            }
         } catch (err) {
             console.error(err);
-            alert('Login failed. (Mock: Check console)');
+            setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -74,8 +88,26 @@ const Login = () => {
                         />
                     </div>
 
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', marginTop: '1rem' }}>
-                        Sign In
+                    {error && (
+                        <div style={{
+                            background: 'rgba(220, 38, 38, 0.2)',
+                            border: '1px solid rgba(220, 38, 38, 0.5)',
+                            borderRadius: '8px',
+                            padding: '0.75rem',
+                            color: '#fca5a5',
+                            fontSize: '0.875rem'
+                        }}>
+                            {error}
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        style={{ width: '100%', padding: '1rem', marginTop: '1rem' }}
+                        disabled={loading}
+                    >
+                        {loading ? 'Signing In...' : 'Sign In'}
                     </button>
                 </form>
 
