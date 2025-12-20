@@ -55,8 +55,17 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const hasRole = (requiredRole) => {
+    return user?.role === requiredRole;
+  };
+
+  const isLandlord = () => user?.role === 'landlord' || user?.role === 'agent';
+  const isTenant = () => user?.role === 'tenant' || user?.role === 'general';
+  const isCompany = () => user?.role === 'company';
+  const isAgent = () => user?.role === 'agent';
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, hasRole, isLandlord, isTenant, isCompany, isAgent }}>
       {children}
     </AuthContext.Provider>
   );

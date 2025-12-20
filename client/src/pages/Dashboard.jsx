@@ -15,7 +15,7 @@ import { authService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading, isLandlord, isTenant, isCompany, isAgent } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -23,6 +23,21 @@ const Dashboard = () => {
     authService.logout();
     navigate("/login");
   };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--color-primary)',
+        color: 'white'
+      }}>
+        Loading...
+      </div>
+    );
+  }
 
   // If no user, redirect to login
   if (!user) {
@@ -79,24 +94,34 @@ const Dashboard = () => {
             active={activeTab === "overview"}
             onClick={() => setActiveTab("overview")}
           />
-          <SidebarItem
-            icon={<FaHome />}
-            label="My Properties"
-            active={activeTab === "properties"}
-            onClick={() => (window.location.href = "/properties")}
-          />
-          <SidebarItem
-            icon={<FaBuilding />}
-            label="Dev Requests"
-            active={activeTab === "dev-requests"}
-            onClick={() => (window.location.href = "/development-requests")}
-          />
-          <SidebarItem
-            icon={<FaHeart />}
-            label="Wishlist"
-            active={activeTab === "wishlist"}
-            onClick={() => (window.location.href = "/wishlist")}
-          />
+
+          {(isLandlord() || isAgent() || isCompany()) && (
+            <SidebarItem
+              icon={<FaHome />}
+              label="My Properties"
+              active={activeTab === "properties"}
+              onClick={() => (window.location.href = "/properties")}
+            />
+          )}
+
+          {isCompany() && (
+            <SidebarItem
+              icon={<FaBuilding />}
+              label="Dev Requests"
+              active={activeTab === "dev-requests"}
+              onClick={() => (window.location.href = "/development-requests")}
+            />
+          )}
+
+          {isTenant() && (
+            <SidebarItem
+              icon={<FaHeart />}
+              label="Wishlist"
+              active={activeTab === "wishlist"}
+              onClick={() => (window.location.href = "/wishlist")}
+            />
+          )}
+
           <SidebarItem
             icon={<FaComments />}
             label="Messages"
@@ -144,13 +169,26 @@ const Dashboard = () => {
         >
           <h1 style={{ fontFamily: "var(--font-heading)", color: "white" }}>
             Welcome back, <span className="text-accent">{user?.name || 'User'}</span>
+            <span style={{
+              fontSize: "0.8rem",
+              background: "rgba(212, 175, 55, 0.2)",
+              padding: "0.2rem 0.6rem",
+              borderRadius: "12px",
+              marginLeft: "1rem",
+              color: "var(--color-accent)",
+              border: "1px solid rgba(212, 175, 55, 0.4)"
+            }}>
+              {user?.role?.toUpperCase()}
+            </span>
           </h1>
-          <button className="btn btn-primary" style={{ gap: "0.5rem" }}>
-            <FaPlus size={12} /> List New Property
-          </button>
+          {(isLandlord() || isAgent() || isCompany()) && (
+            <button className="btn btn-primary" style={{ gap: "0.5rem" }}>
+              <FaPlus size={12} /> List New Property
+            </button>
+          )}
         </header>
 
-        {/* Dashboard Stats */}
+        {/* Dashboard Stats - Role Based */}
         <div
           style={{
             display: "grid",
@@ -159,9 +197,29 @@ const Dashboard = () => {
             marginBottom: "3rem",
           }}
         >
-          <StatCard number="12" label="Properties Viewed" />
-          <StatCard number="5" label="Saved Listings" />
-          <StatCard number="2" label="Scheduled Visits" />
+          {isTenant() && (
+            <>
+              <StatCard number="12" label="Properties Viewed" />
+              <StatCard number="5" label="Saved Listings" />
+              <StatCard number="2" label="Scheduled Visits" />
+            </>
+          )}
+
+          {(isLandlord() || isAgent()) && (
+            <>
+              <StatCard number="3" label="Active Listings" />
+              <StatCard number="28" label="Total Views" />
+              <StatCard number="4" label="New Inquiries" />
+            </>
+          )}
+
+          {isCompany() && (
+            <>
+              <StatCard number="2" label="Active Projects" />
+              <StatCard number="15" label="Units Available" />
+              <StatCard number="8" label="Pending Bids" />
+            </>
+          )}
         </div>
 
         {/* Recent Activity Section */}

@@ -84,9 +84,9 @@ export const authService = {
   register: async (userData) => {
     // Map frontend role values to backend enum
     const roleMap = {
-      tenant: "general",
+      tenant: "tenant",
       landlord: "landlord",
-      agent: "landlord",
+      agent: "agent",
       company: "company",
     };
 
