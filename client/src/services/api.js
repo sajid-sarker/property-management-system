@@ -187,4 +187,29 @@ export const wishlistService = {
   },
 };
 
+// ============ BOOST SERVICE ============
+export const boostService = {
+  // Get boost pricing options
+  getPricing: () => api.get("/boosts/pricing"),
+
+  // Create a new boost for a property
+  createBoost: (propertyId, landlordId, duration, amount, paymentMethod = "card") =>
+    api.post("/boosts", {
+      propertyId,
+      landlordId,
+      duration,
+      amount,
+      paymentMethod,
+    }),
+
+  // Get all boosts for a landlord
+  getMyBoosts: (landlordId) => api.get(`/boosts/landlord/${landlordId}`),
+
+  // Get all active boosts
+  getActiveBoosts: () => api.get("/boosts/active"),
+
+  // Cancel a boost
+  cancelBoost: (boostId) => api.delete(`/boosts/${boostId}`),
+};
+
 export default api;

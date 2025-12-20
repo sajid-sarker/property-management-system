@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
@@ -15,30 +15,29 @@ import AddPropertyPage from "./pages/AddPropertyPage.jsx";
 
 function App() {
   return (
-    <Router>
-      <div className="app-container">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/properties" element={<Properties />} />
-          <Route path="/properties-list" element={<PropertyListPage />} />
-          <Route path="/properties/:id" element={<PropertyDetailsPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
-          <Route
-            path="/development-requests"
-            element={<DevelopmentRequests />}
-          />
-          <Route path="/add-property" element={<AddPropertyPage />} />
-          {/* Fallback route */}
-          <Route path="*" element={<HomePage />} />
-        </Routes>
-      </div>
-    </Router>
+    <div className="app-container">
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/properties" element={<Properties />} />
+        <Route path="/properties-list" element={<PropertyListPage />} />
+        <Route path="/properties/:id" element={<PropertyDetailsPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route
+          path="/development-requests"
+          element={<DevelopmentRequests />}
+        />
+        <Route path="/add-property" element={<AddPropertyPage />} />
+        {/* Fallback route */}
+        <Route path="*" element={<HomePage />} />
+      </Routes>
+    </div>
   );
 }
 
 export default App;
+
