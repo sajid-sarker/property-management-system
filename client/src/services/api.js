@@ -30,6 +30,13 @@ export const propertyService = {
   // Get single property by ID
   getById: (id) => api.get(`/properties/${id}`),
 
+  // Get single property by ID
+  deleteProperty: (id) => api.delete(`/properties/${id}`),
+  searchProperties: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/properties/search?${queryString}`);
+  },
+
   // Create new property
   create: (data) => {
     // Transform frontend data to match backend schema

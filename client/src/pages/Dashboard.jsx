@@ -10,6 +10,7 @@ import {
   FaBuilding,
   FaComments,
   FaBell,
+  FaSearch,
   FaRocket,
   FaListAlt,
 } from "react-icons/fa";
@@ -93,6 +94,13 @@ const Dashboard = () => {
         <nav
           style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
         >
+          <SidebarItem
+            icon={<FaSearch />}
+            label="Search"
+            active={false} // Always navigates to /search
+            onClick={() => navigate("/search")}
+          />
+
           <SidebarItem
             icon={<FaUser />}
             label="Overview"
