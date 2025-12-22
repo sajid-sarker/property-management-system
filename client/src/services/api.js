@@ -26,7 +26,7 @@ api.interceptors.request.use(
 // ============ NOTIFICATION SERVICE ============
 export const notificationService = {
   // Get all notifications
-  getUserNotifications: () => api.get("/notifications"),
+  getUserNotifications: () => api.get("/properties/notifications/mine"),
 
   // Mark notification as read
   markAsRead: (id) => api.put(`/notifications/${id}/read`),
@@ -104,9 +104,9 @@ export const authService = {
   register: async (userData) => {
     // Map frontend role values to backend enum
     const roleMap = {
-      tenant: "general",
+      tenant: "tenant",      // Fixed: was "general", now correctly "tenant"
       landlord: "landlord",
-      agent: "landlord",
+      agent: "agent",        // Fixed: was "landlord", now correctly "agent"
       company: "company",
     };
 

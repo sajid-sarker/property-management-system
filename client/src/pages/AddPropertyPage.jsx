@@ -26,9 +26,20 @@ const AddPropertyPage = () => {
         setIsSubmitting(true);
 
         try {
+            const landlordId = user?._id || user?.userId || user?.id;
+
+            if (!landlordId) {
+                console.error('No landlord ID found! User object:', user);
+                alert('Error: Unable to identify user. Please log in again.');
+                setIsSubmitting(false);
+                return;
+            }
+
+            console.log('Creating property with landlord ID:', landlordId);
+
             const response = await propertyService.create({
                 ...formData,
-                landlord: user?._id || user?.id,
+                landlord: landlordId,
             });
 
             const newProperty = response.data?.data || response.data;

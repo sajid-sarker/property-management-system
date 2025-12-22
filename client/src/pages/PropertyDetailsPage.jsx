@@ -511,13 +511,15 @@ const PropertyDetailsPage = () => {
                 className="btn btn-primary"
                 style={{ width: "100%", background: "var(--color-accent)", color: "black", fontWeight: "bold" }}
                 onClick={async () => {
+                  console.log("Interested button clicked!"); // DEBUG
                   try {
-                    // Use 'id' from useParams which is always defined
+                    console.log("Calling markInterested for ID:", id); // DEBUG
                     await propertyService.markInterested(id);
+                    console.log("markInterested call successful"); // DEBUG
                     alert("Interest marked! The owner has been notified.");
                   } catch (error) {
                     console.error("Error marking interest:", error);
-                    alert("Failed to mark interest. You might be not logged in.");
+                    alert(`Failed to mark interest: ${error.message || "Unknown error"}`);
                   }
                 }}
               >

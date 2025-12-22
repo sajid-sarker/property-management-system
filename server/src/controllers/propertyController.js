@@ -42,7 +42,15 @@ export const getPropertyById = async (req, res) => {
 };
 
 export const createProperty = async (req, res) => {
-  const property = req.body; // user will send this data
+  console.log("Create Property Request Body:", req.body); // DEBUG
+  const property = req.body;
+
+  // Force assignment of landlord from authenticated user if not present or just to be safe
+  // The 'protect' middleware guarantees req.user exists
+  if (req.user) {
+    property.landlord = req.user._id || req.user.userId;
+    console.log("Assigned landlord from req.user:", property.landlord);
+  }
 
   if (!property.title || !property.description || !property.price || !property.images) {
     return res
@@ -54,6 +62,7 @@ export const createProperty = async (req, res) => {
 
   try {
     await newProperty.save();
+    console.log("Property saved successfully:", newProperty);
     res.status(201).json({ success: true, data: newProperty });
   } catch (error) {
     console.error("Error in Create property:", error);
@@ -129,18 +138,29 @@ export const markInterested = async (req, res) => {
     const userName = req.user.name || "A potential tenant/buyer";
 
     // 3. Create Notification for Landlord
+    console.log(`[Interest] Property Landlord ID: ${property.landlord}`);
+    console.log(`[Interest] Requesting User ID: ${userId}`);
+
     if (property.landlord) {
-      // Don't notify if landlord is looking at their own property (optional check)
       if (property.landlord.toString() !== userId.toString()) {
-        // const Notification = (await import("../models/Notification.js")).default;
+        console.log("[Interest] Creating notification document...");
 
+        try {
+          const notification = await Notification.create({
+            user: property.landlord, // Recipient
+            message: `${userName} is interested in your property: "${property.title}"`,
+            isRead: false
+          });
+          console.log("[Interest] Notification SAVED successfully:", notification);
+        } catch (saveError) {
+          console.error("[Interest] Failed to save notification:", saveError);
+        }
 
-        await Notification.create({
-          user: property.landlord, // Recipient
-          message: `${userName} is interested in your property: "${property.title}"`,
-          isRead: false
-        });
+      } else {
+        console.log("[Interest] Landlord is visiting own property. Notification skipped.");
       }
+    } else {
+      console.error("[Interest] CRITICAL: Property has no landlord field! Notification cannot be sent.");
     }
 
     res.status(200).json({ success: true, message: "Interest marked successfully" });

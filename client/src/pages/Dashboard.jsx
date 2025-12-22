@@ -27,7 +27,9 @@ const Dashboard = () => {
     if (activeTab === "notifications") {
       const fetchNotifications = async () => {
         try {
+          console.log("Dashboard: fetching notifications...");
           const response = await notificationService.getUserNotifications();
+          console.log("Dashboard: fetched notifications:", response.data);
           setNotifications(response.data);
         } catch (error) {
           console.error("Failed to fetch notifications", error);
