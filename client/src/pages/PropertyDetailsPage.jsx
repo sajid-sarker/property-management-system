@@ -507,6 +507,23 @@ const PropertyDetailsPage = () => {
                 gap: "1rem",
               }}
             >
+              <button
+                className="btn btn-primary"
+                style={{ width: "100%", background: "var(--color-accent)", color: "black", fontWeight: "bold" }}
+                onClick={async () => {
+                  try {
+                    // Use 'id' from useParams which is always defined
+                    await propertyService.markInterested(id);
+                    alert("Interest marked! The owner has been notified.");
+                  } catch (error) {
+                    console.error("Error marking interest:", error);
+                    alert("Failed to mark interest. You might be not logged in.");
+                  }
+                }}
+              >
+                👋 I'm Interested
+              </button>
+
               <div
                 style={{
                   display: "flex",

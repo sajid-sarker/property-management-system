@@ -7,7 +7,8 @@ import {
   getProperties,
   getPropertyById,
   updateProperty,
-  searchProperties
+  searchProperties,
+  markInterested
 } from "../controllers/propertyController.js";
 
 const router = express.Router();
@@ -22,6 +23,7 @@ router.get("/:id", getPropertyById);
 router.post("/", verifyUser, createProperty);
 router.put("/:id", verifyUser, updateProperty);
 router.delete("/:id", verifyUser, deleteProperty);
+router.post("/:id/interested", verifyUser, markInterested);
 
 export default router;
 

@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
+
 import Property from "../models/Property.js";
+import Notification from "../models/Notification.js";
 
 export const getProperties = async (req, res) => {
   try {
@@ -106,6 +108,44 @@ export const deleteProperty = async (req, res) => {
     res.status(200).json({ success: true, message: "Property deleted" });
   } catch (error) {
     console.log("error in deleting property:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// [NEW] Mark Interest in Property
+export const markInterested = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId || req.user._id;
+
+    // 1. Find Property
+    const property = await Property.findById(id);
+    if (!property) {
+      return res.status(404).json({ success: false, message: "Property not found" });
+    }
+
+    // 2. Find authenticated user info (for the message)
+    // Assuming req.user is populated with name (if not, we might say "Someone")
+    const userName = req.user.name || "A potential tenant/buyer";
+
+    // 3. Create Notification for Landlord
+    if (property.landlord) {
+      // Don't notify if landlord is looking at their own property (optional check)
+      if (property.landlord.toString() !== userId.toString()) {
+        // const Notification = (await import("../models/Notification.js")).default;
+
+
+        await Notification.create({
+          user: property.landlord, // Recipient
+          message: `${userName} is interested in your property: "${property.title}"`,
+          isRead: false
+        });
+      }
+    }
+
+    res.status(200).json({ success: true, message: "Interest marked successfully" });
+  } catch (error) {
+    console.error("Error marking interest:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };

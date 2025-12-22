@@ -14,13 +14,28 @@ import {
   FaRocket,
   FaListAlt,
 } from "react-icons/fa";
-import { authService } from "../services/api";
+import { authService, notificationService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
 const Dashboard = () => {
   const { user, logout, loading, isLandlord, isTenant, isCompany, isAgent } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const [notifications, setNotifications] = useState([]);
+
+  React.useEffect(() => {
+    if (activeTab === "notifications") {
+      const fetchNotifications = async () => {
+        try {
+          const response = await notificationService.getUserNotifications();
+          setNotifications(response.data);
+        } catch (error) {
+          console.error("Failed to fetch notifications", error);
+        }
+      };
+      fetchNotifications();
+    }
+  }, [activeTab]);
 
   // Determine if user is a landlord
   // Determine if user is a landlord - logic moved to useAuth hook
@@ -339,19 +354,20 @@ const Dashboard = () => {
                   gap: "1rem",
                 }}
               >
-                <ActivityItem
-                  text="Price Drop! 'Seaside Manor' is now $2.5M (was $2.8M)"
-                  time="1 hour ago"
-                  isHighlight
-                />
-                <ActivityItem
-                  text="New Inquiry: Someone is interested in your listing"
-                  time="5 hours ago"
-                />
-                <ActivityItem
-                  text="System: Your profile was successfully updated"
-                  time="1 day ago"
-                />
+                {notifications.length > 0 ? (
+                  notifications.map((notif) => (
+                    <ActivityItem
+                      key={notif._id}
+                      text={notif.message}
+                      time={new Date(notif.createdAt).toLocaleString()}
+                      isHighlight={!notif.isRead}
+                    />
+                  ))
+                ) : (
+                  <div style={{ color: "var(--color-text-light)" }}>
+                    No notifications yet.
+                  </div>
+                )}
               </div>
             </>
           )}

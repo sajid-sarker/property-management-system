@@ -22,6 +22,16 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+
+// ============ NOTIFICATION SERVICE ============
+export const notificationService = {
+  // Get all notifications
+  getUserNotifications: () => api.get("/notifications"),
+
+  // Mark notification as read
+  markAsRead: (id) => api.put(`/notifications/${id}/read`),
+};
+
 // ============ PROPERTY SERVICE ============
 export const propertyService = {
   // Get all properties from database
@@ -36,6 +46,9 @@ export const propertyService = {
     const queryString = new URLSearchParams(params).toString();
     return api.get(`/properties/search?${queryString}`);
   },
+
+  // Mark property as interested
+  markInterested: (id) => api.post(`/properties/${id}/interested`),
 
   // Create new property
   create: (data) => {
