@@ -42,6 +42,9 @@ const Dashboard = () => {
   // Determine if user is a landlord
   // Determine if user is a landlord - logic moved to useAuth hook
 
+  // Determine if user is a landlord
+  // Determine if user is a landlord - logic moved to useAuth hook
+
   const handleLogout = () => {
     authService.logout();
     navigate("/login");
@@ -61,6 +64,7 @@ const Dashboard = () => {
       </div>
     );
   }
+
   // If no user, redirect to login
   if (!user) {
     return (
