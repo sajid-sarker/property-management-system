@@ -44,7 +44,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
   // If no user, redirect to login
   if (!user) {
     return (
