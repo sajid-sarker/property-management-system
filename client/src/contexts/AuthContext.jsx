@@ -18,6 +18,10 @@ export const AuthProvider = ({ children }) => {
             setUser(storedUser.user);
           } else if (storedUser) {
             setUser(storedUser);
+          } else {
+            // If we have a token but no user info, clear token
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
           }
         } catch (error) {
           console.error("Failed to fetch user", error);
@@ -34,14 +38,18 @@ export const AuthProvider = ({ children }) => {
     const response = await authService.login(credentials);
     const { token, user } = response.data;
     localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
     setUser(user);
+    return user;
   };
 
   const register = async (userData) => {
     const response = await authService.register(userData);
     const { token, user } = response.data;
     localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
     setUser(user);
+    return user;
   };
 
   const logout = () => {
@@ -49,8 +57,17 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const hasRole = (requiredRole) => {
+    return user?.role === requiredRole;
+  };
+
+  const isLandlord = () => user?.role === 'landlord' || user?.role === 'agent';
+  const isTenant = () => user?.role === 'tenant' || user?.role === 'general';
+  const isCompany = () => user?.role === 'company';
+  const isAgent = () => user?.role === 'agent';
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, hasRole, isLandlord, isTenant, isCompany, isAgent }}>
       {children}
     </AuthContext.Provider>
   );

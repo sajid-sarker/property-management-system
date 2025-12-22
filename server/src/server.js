@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import { connectDB } from "./config/db.js";
 import propertyRoutes from "./routes/propertyRoutes.js";
 import boostRoutes from "./routes/boostRoutes.js";
@@ -10,6 +11,7 @@ dotenv.config();
 const app = express();
 
 // CORS middleware for frontend communication
+app.use(cors());
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -43,4 +45,3 @@ app.listen(5000, () => {
   connectDB();
   console.log("Server started at http://localhost:5000");
 });
-

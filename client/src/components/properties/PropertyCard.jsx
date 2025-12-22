@@ -2,13 +2,23 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Box, Flex, HStack, Text, Icon, Badge } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
-import { FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaStar } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaStar, FaTrash } from 'react-icons/fa';
+import { useAuth } from '../../contexts/AuthContext';
+import { propertyService } from '../../services/api';
 
 /**
  * Reusable PropertyCard Component
  * Displays property information with boost/featured badge
  */
 const PropertyCard = ({ data, index = 0 }) => {
+    const { user } = useAuth();
+
+    // Safety check
+    if (!data) return null;
+
+    // Debugging
+    // console.log("PropertyCard:", { id: data._id, landlord: data.landlord, user: user?._id || user?.id });
+
     // Handle different data formats
     const propertyId = data._id || data.propertyId || data.id;
     const imageUrl = data.image || (data.images && data.images[0]) || 'https://placehold.co/400x300/14141f/d4af37?text=No+Image';
@@ -36,31 +46,75 @@ const PropertyCard = ({ data, index = 0 }) => {
                     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
                 }}
             >
-                {/* Featured Badge for Boosted Properties */}
-                {isBoosted && (
-                    <Badge
-                        position="absolute"
-                        top="0"
-                        left="0"
-                        zIndex="10"
-                        background="linear-gradient(135deg, #d4af37, #c5a028)"
-                        color="#0a0a0f"
-                        px="4"
-                        py="2"
-                        borderBottomRightRadius="12px"
-                        fontWeight="700"
-                        fontSize="0.75rem"
-                        textTransform="uppercase"
-                        display="flex"
-                        alignItems="center"
-                        gap="1"
-                        boxShadow="0 2px 10px rgba(212, 175, 55, 0.4)"
-                    >
-                        <FaStar size={10} /> Featured
-                    </Badge>
-                )}
+                {/* Delete Button for Owner - OUTSIDE LINK for safety */}
+                {data.landlord && (
+                    (typeof data.landlord === 'object' ? data.landlord?._id : data.landlord)?.toString() === user?._id?.toString() ||
+                    (typeof data.landlord === 'object' ? data.landlord?._id : data.landlord)?.toString() === user?.id?.toString()
+                ) && (
+                        <button
+                            onClick={async (e) => {
+                                e.preventDefault();
+                                e.stopPropagation(); // Stop event bubbling
+                                if (window.confirm("Are you sure you want to delete this listing?")) {
+                                    try {
+                                        await propertyService.deleteProperty(propertyId);
+                                        window.location.reload();
+                                    } catch (err) {
+                                        console.error(err);
+                                        alert("Failed to delete property");
+                                    }
+                                }
+                            }}
+                            style={{
+                                position: "absolute",
+                                top: "10px",
+                                left: "10px",
+                                zIndex: 100, // High Z-Index
+                                background: "#ef4444", // Tailwind red-500
+                                color: "white",
+                                border: "none",
+                                borderRadius: "50%",
+                                width: "36px",
+                                height: "36px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
+                            }}
+                            title="Delete Property"
+                        >
+                            <FaTrash size={14} />
+                        </button>
+                    )}
 
-                <Link to={`/properties/${propertyId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                {/* Main Card Content Link */}
+                <Link to={`/properties/${propertyId}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+
+                    {/* Featured Badge for Boosted Properties */}
+                    {isBoosted && (
+                        <Badge
+                            position="absolute"
+                            top="0"
+                            right="0" // Changed to right to not overlap delete button
+                            zIndex="10"
+                            background="linear-gradient(135deg, #d4af37, #c5a028)"
+                            color="#0a0a0f"
+                            px="4"
+                            py="2"
+                            borderBottomLeftRadius="12px" // Adjusted radius
+                            fontWeight="700"
+                            fontSize="0.75rem"
+                            textTransform="uppercase"
+                            display="flex"
+                            alignItems="center"
+                            gap="1"
+                            boxShadow="0 2px 10px rgba(212, 175, 55, 0.4)"
+                        >
+                            <FaStar size={10} /> Featured
+                        </Badge>
+                    )}
+
                     {/* Image Container */}
                     <Box height="280px" overflow="hidden" position="relative">
                         <Box
@@ -74,10 +128,10 @@ const PropertyCard = ({ data, index = 0 }) => {
                             _hover={{ transform: 'scale(1.05)' }}
                         />
 
-                        {/* Type Badge */}
+                        {/* Type Badge - Moved down slightly if needed, or kept same */}
                         <Badge
                             position="absolute"
-                            top="4"
+                            top="50px" // Moved down to avoid overlap with Featured badge if both exist
                             right="4"
                             background="rgba(212, 175, 55, 0.9)"
                             color="#0a0a0f"
@@ -91,7 +145,7 @@ const PropertyCard = ({ data, index = 0 }) => {
                             {data.type || (data.isForSale ? 'For Sale' : 'For Rent')}
                         </Badge>
 
-                        {/* Price Overlay */}
+                        {/* ... Rest of existing Image layout ... */}
                         <Box
                             position="absolute"
                             bottom="0"

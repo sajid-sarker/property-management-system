@@ -12,6 +12,7 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
 import DevelopmentRequests from "./pages/DevelopmentRequests.jsx";
 import AddPropertyPage from "./pages/AddPropertyPage.jsx";
+import SearchPage from "./pages/SearchPage.jsx";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/properties" element={<Properties />} />
         <Route path="/properties-list" element={<PropertyListPage />} />
         <Route path="/properties/:id" element={<PropertyDetailsPage />} />
