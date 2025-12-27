@@ -367,6 +367,7 @@ const Dashboard = () => {
                       text={notif.message}
                       time={new Date(notif.createdAt).toLocaleString()}
                       isHighlight={!notif.isRead}
+                      link={notif.relatedId && notif.type !== 'general' ? `/property/${notif.relatedId}` : null}
                     />
                   ))
                 ) : (
@@ -541,22 +542,37 @@ const StatCard = ({ number, label }) => (
   </div>
 );
 
-const ActivityItem = ({ text, time, isHighlight }) => (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      padding: "1rem",
-      background: "rgba(0,0,0,0.2)",
-      borderRadius: "8px",
-      borderLeft: isHighlight ? "3px solid var(--color-accent)" : "none",
-    }}
-  >
-    <div style={{ color: "var(--color-text-main)" }}>{text}</div>
-    <div style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>
-      {time}
+const ActivityItem = ({ text, time, isHighlight, link }) => {
+  const content = (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        padding: "1rem",
+        background: "rgba(0,0,0,0.2)",
+        borderRadius: "8px",
+        borderLeft: isHighlight ? "3px solid var(--color-accent)" : "none",
+        cursor: link ? "pointer" : "default",
+        transition: "background 0.2s",
+      }}
+      className={link ? "hover:bg-black/40" : ""}
+    >
+      <div style={{ color: "var(--color-text-main)" }}>{text}</div>
+      <div style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>
+        {time}
+      </div>
     </div>
-  </div>
-);
+  );
+
+  if (link) {
+    return (
+      <Link to={link} style={{ display: 'block', textDecoration: 'none' }}>
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
+};
 
 export default Dashboard;

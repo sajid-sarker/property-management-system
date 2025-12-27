@@ -125,6 +125,8 @@ export const placeBid = async (req, res) => {
             await Notification.create({
                 user: property.landlord,
                 message: `${bidderName} placed a bid of $${bidAmount} on your property: "${property.title}"`,
+                type: 'bid_received',
+                relatedId: property._id,
                 isRead: false
             });
         }
@@ -355,6 +357,8 @@ export const acceptBid = async (req, res) => {
         await Notification.create({
             user: bid.bidder,
             message: `Congratulations! Your bid of $${bid.bidAmount} on "${property.title}" has been accepted!`,
+            type: 'bid_accepted',
+            relatedId: property._id,
             isRead: false
         });
 
@@ -363,6 +367,8 @@ export const acceptBid = async (req, res) => {
             await Notification.create({
                 user: rejectedBid.bidder,
                 message: `Your bid of $${rejectedBid.bidAmount} on "${property.title}" was not selected. The property has been sold.`,
+                type: 'bid_rejected',
+                relatedId: property._id,
                 isRead: false
             });
         }
@@ -416,6 +422,8 @@ export const rejectBid = async (req, res) => {
         await Notification.create({
             user: bid.bidder,
             message: `Your bid of $${bid.bidAmount} on "${property.title}" has been rejected.`,
+            type: 'bid_rejected',
+            relatedId: property._id,
             isRead: false
         });
 
