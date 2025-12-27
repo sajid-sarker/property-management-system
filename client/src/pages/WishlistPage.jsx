@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { wishlistService } from '../services/api'; // Ensure this is exported in api.js
 import { FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaTrash } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import Sidebar from '../components/common/Sidebar';
 
 const WishlistPage = () => {
     const [wishlist, setWishlist] = useState([]);
@@ -31,26 +32,11 @@ const WishlistPage = () => {
         }
     };
 
-    // Navbar reusable component
-    const Navbar = () => (
-        <nav className="navbar scrolled">
-            <div className="container nav-content">
-                <Link to="/" className="logo">Luxe<span className="text-accent">Estate</span></Link>
-                <div className="nav-links hidden-mobile">
-                    <Link to="/" className="nav-link">Home</Link>
-                    <Link to="/properties" className="nav-link">Residences</Link>
-                    <Link to="/dashboard" className="nav-link">Dashboard</Link>
-                </div>
-            </div>
-        </nav>
-    );
-
     return (
-        <div style={{ background: 'var(--color-primary)', minHeight: '100vh', color: 'white' }}>
-            <Navbar />
-
-            <div className="container" style={{ paddingTop: '8rem', paddingBottom: '4rem' }}>
-                <h1 style={{ fontSize: '3rem', fontFamily: 'var(--font-heading)', marginBottom: '2rem' }}>Your <span className="text-accent">Wishlist</span></h1>
+        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-primary)' }}>
+            <Sidebar />
+            <div style={{ flex: 1, padding: '3rem', color: 'white' }}>
+                <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-heading)', marginBottom: '2rem' }}>Your <span className="text-accent">Wishlist</span></h1>
 
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: '4rem' }}>Loading wishlist...</div>

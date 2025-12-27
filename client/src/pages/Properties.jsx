@@ -20,6 +20,10 @@ const Properties = () => {
     const [filter, setFilter] = useState('all');
 
     useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    useEffect(() => {
         const fetchProperties = async () => {
             try {
                 const response = await propertyService.getAll();

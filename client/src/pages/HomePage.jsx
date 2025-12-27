@@ -9,23 +9,20 @@ import {
   FaBath,
   FaRulerCombined,
   FaStar,
-  FaBars,
 } from "react-icons/fa";
 import { propertyService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import Navbar from "../components/common/Navbar";
+import Footer from "../components/common/Footer";
 
 const HomePage = () => {
   const { user } = useAuth();
-  const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
   const yHero = useTransform(scrollY, [0, 500], [0, 200]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-
     // Fetch properties from our MERN-aligned service
     const fetchProperties = async () => {
       try {
@@ -41,56 +38,11 @@ const HomePage = () => {
       }
     };
     fetchProperties();
-
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  // Navbar Component
-  const Navbar = () => (
-    <nav className={`navbar ${scrolled ? "scrolled" : ""}`}>
-      <div className="container nav-content">
-        <a href="/" className="logo">
-          Luxe<span className="text-accent">Estate</span>
-        </a>
-        <div className="nav-links hidden-mobile">
-          <a href="#featured" className="nav-link">
-            Residences
-          </a>
-          <a href="#about" className="nav-link">
-            The Agency
-          </a>
-          <a href="#services" className="nav-link">
-            Services
-          </a>
-          <a href="#contact" className="nav-link">
-            Contact
-          </a>
-        </div>
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <Link to="/login">
-            <button
-              className="btn btn-primary"
-              style={{ fontSize: "0.875rem", padding: "0.5rem 1.5rem" }}
-            >
-              Login
-            </button>
-          </Link>
-          <FaBars
-            className="mobile-menu-icon"
-            style={{
-              fontSize: "1.5rem",
-              color: "var(--color-text-main)",
-              display: "none",
-            }}
-          />
-        </div>
-      </div>
-    </nav>
-  );
 
   return (
     <div className="home-page" style={{ background: "var(--color-primary)" }}>
-      <Navbar />
+      <Navbar variant="transparent" />
 
       {/* Cinematic Hero Section */}
       <section
@@ -403,46 +355,8 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer
-        style={{
-          background: "var(--color-background)",
-          padding: "6rem 0 2rem 0",
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-        }}
-      >
-        <div className="container" style={{ textAlign: "center" }}>
-          <h2 className="logo" style={{ marginBottom: "2rem" }}>
-            Luxe<span className="text-accent">Estate</span>
-          </h2>
-          <div
-            className="nav-links"
-            style={{ justifyContent: "center", marginBottom: "3rem" }}
-          >
-            <a href="#" className="nav-link">
-              Home
-            </a>
-            <a href="#" className="nav-link">
-              Properties
-            </a>
-            <a href="#" className="nav-link">
-              About
-            </a>
-            <a href="#" className="nav-link">
-              Journal
-            </a>
-            <a href="#" className="nav-link">
-              Contact
-            </a>
-          </div>
-          <div
-            style={{ color: "var(--color-text-light)", fontSize: "0.875rem" }}
-          >
-            &copy; 2024 LuxeEstate Property Management. Created with React &
-            MERN Architecture.
-          </div>
-        </div>
-      </footer>
+      {/* Reusable Footer Component */}
+      <Footer />
     </div>
   );
 };

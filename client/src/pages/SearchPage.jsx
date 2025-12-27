@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaSearch, FaArrowLeft } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import { propertyService } from "../services/api";
 import PropertyCard from "../components/properties/PropertyCard";
+import Sidebar from "../components/common/Sidebar";
 
 const SearchPage = () => {
     const navigate = useNavigate();
@@ -44,24 +45,22 @@ const SearchPage = () => {
 
     return (
         <div style={{
+            display: "flex",
             minHeight: "100vh",
             background: "var(--color-primary)",
-            padding: "2rem",
-            color: "white"
         }}>
-            {/* Header */}
-            <div style={{ maxWidth: "1200px", margin: "0 auto", marginBottom: "2rem" }}>
-                <button
-                    onClick={() => navigate('/dashboard')}
-                    className="btn"
-                    style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-text-light)", marginBottom: "1rem" }}
-                >
-                    <FaArrowLeft /> Back to Dashboard
-                </button>
-                <h1 style={{ fontFamily: "var(--font-heading)", color: "white" }}>
-                    Find Your <span className="text-accent">Dream Property</span>
-                </h1>
-            </div>
+            <Sidebar />
+            <div style={{
+                flex: 1,
+                padding: "2rem",
+                color: "white"
+            }}>
+                {/* Header */}
+                <div style={{ maxWidth: "1200px", margin: "0 auto", marginBottom: "2rem" }}>
+                    <h1 style={{ fontFamily: "var(--font-heading)", color: "white" }}>
+                        Find Your <span className="text-accent">Dream Property</span>
+                    </h1>
+                </div>
 
             {/* Search Form */}
             <div style={{
@@ -149,6 +148,7 @@ const SearchPage = () => {
                     )}
                 </div>
             )}
+            </div>
         </div>
     );
 };
