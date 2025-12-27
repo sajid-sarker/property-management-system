@@ -215,3 +215,103 @@ export const searchProperties = async (req, res) => {
   }
 };
 
+// [NEW] Add Review to Property - Feature 4 of Requirement 3
+export const addReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user._id || req.user.userId;
+
+    // Validate rating
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Rating must be between 1 and 5"
+      });
+    }
+
+    // Find property
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid Property Id" });
+    }
+
+    const property = await Property.findById(id);
+    if (!property) {
+      return res.status(404).json({ success: false, message: "Property not found" });
+    }
+
+    // Check if user already reviewed this property
+    const existingReview = property.reviews.find(
+      (review) => review.user.toString() === userId.toString()
+    );
+
+    if (existingReview) {
+      // Update existing review
+      existingReview.rating = rating;
+      existingReview.comment = comment || existingReview.comment;
+      existingReview.createdAt = Date.now();
+    } else {
+      // Add new review
+      property.reviews.push({
+        user: userId,
+        rating,
+        comment: comment || "",
+        createdAt: Date.now(),
+      });
+    }
+
+    // Calculate new average rating
+    const totalRatings = property.reviews.reduce((sum, r) => sum + r.rating, 0);
+    property.averageRating = (totalRatings / property.reviews.length).toFixed(1);
+
+    await property.save();
+
+    // Populate user info for the response
+    await property.populate("reviews.user", "name image");
+
+    res.status(200).json({
+      success: true,
+      message: existingReview ? "Review updated successfully" : "Review added successfully",
+      data: {
+        reviews: property.reviews,
+        averageRating: property.averageRating
+      }
+    });
+
+  } catch (error) {
+    console.error("Error adding review:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// [NEW] Get Reviews for Property
+export const getPropertyReviews = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid Property Id" });
+    }
+
+    const property = await Property.findById(id)
+      .select("reviews averageRating")
+      .populate("reviews.user", "name image");
+
+    if (!property) {
+      return res.status(404).json({ success: false, message: "Property not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        reviews: property.reviews,
+        averageRating: property.averageRating,
+        totalReviews: property.reviews.length
+      }
+    });
+
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
