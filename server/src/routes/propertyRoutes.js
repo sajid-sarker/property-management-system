@@ -6,6 +6,7 @@ import {
   deleteProperty,
   getProperties,
   getPropertyById,
+  getMyProperties,
   updateProperty,
   searchProperties,
   markInterested,
@@ -34,6 +35,9 @@ router.get("/notifications/mine", verifyUser, async (req, res) => {
 
 // Search route must be before /:id to prevent "search" being treated as an id
 router.get("/search", searchProperties);
+
+// Landlord's own properties (must be before /:id)
+router.get("/my-listings", verifyUser, getMyProperties);
 
 router.get("/", getProperties);
 router.get("/:id", getPropertyById);
