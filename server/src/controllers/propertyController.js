@@ -73,7 +73,7 @@ export const createProperty = async (req, res) => {
 export const updateProperty = async (req, res) => {
   const { id } = req.params;
 
-  const property = req.body;
+  const propertyData = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
@@ -82,11 +82,29 @@ export const updateProperty = async (req, res) => {
   }
 
   try {
-    const updatedProperty = await Property.findByIdAndUpdate(id, property, {
+    // [NEW] Ownership verification - only landlord can edit
+    const existingProperty = await Property.findById(id);
+
+    if (!existingProperty) {
+      return res.status(404).json({ success: false, message: "Property not found" });
+    }
+
+    // Strict ownership verification (if landlord exists and user is authenticated)
+    if (existingProperty.landlord && req.user) {
+      if (existingProperty.landlord.toString() !== req.user._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to edit this property"
+        });
+      }
+    }
+
+    const updatedProperty = await Property.findByIdAndUpdate(id, propertyData, {
       new: true,
     });
     res.status(200).json({ success: true, data: updatedProperty });
   } catch (error) {
+    console.error("Error updating property:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
