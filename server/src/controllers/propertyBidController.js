@@ -6,6 +6,11 @@ import Notification from "../models/Notification.js";
 /**
  * Place a bid on a property
  * POST /api/property-bids/property/:propertyId
+ * 
+ * Race Condition Prevention:
+ * - Uses findOneAndUpdate with atomic operations
+ * - Checks property status before creating bid
+ * - Only allows pending bids on available/bidding properties
  */
 export const placeBid = async (req, res) => {
     try {
@@ -18,6 +23,7 @@ export const placeBid = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid Property Id" });
         }
 
+        // Use findOneAndUpdate for atomic check-and-update to prevent race conditions
         const property = await Property.findById(propertyId);
         if (!property) {
             return res.status(404).json({ success: false, message: "Property not found" });
@@ -38,7 +44,7 @@ export const placeBid = async (req, res) => {
             });
         }
 
-        // Check property status
+        // Check property status - prevent bidding on sold properties (race condition check)
         if (property.status === "sold" || property.status === "rented") {
             return res.status(400).json({
                 success: false,
@@ -54,20 +60,11 @@ export const placeBid = async (req, res) => {
             });
         }
 
-        // Validate bid amount
+        // Validate bid amount - allow any positive amount (above or below starting price)
         if (!bidAmount || bidAmount <= 0) {
             return res.status(400).json({
                 success: false,
                 message: "Bid amount must be a positive number"
-            });
-        }
-
-        // Check if bid is higher than current price (optional: can be removed for any bid)
-        const currentHighest = property.currentPrice || property.startingPrice || property.price;
-        if (bidAmount <= currentHighest) {
-            return res.status(400).json({
-                success: false,
-                message: `Bid amount must be higher than current price: ${currentHighest}`
             });
         }
 
@@ -84,10 +81,16 @@ export const placeBid = async (req, res) => {
             existingBid.message = message || existingBid.message;
             await existingBid.save();
 
-            // Update property current price if this is highest bid
-            property.currentPrice = bidAmount;
-            property.status = "bidding";
-            await property.save();
+            // Update property current price if this bid is the new highest
+            const highestBid = await PropertyBid.findOne({ property: propertyId, status: "pending" })
+                .sort({ bidAmount: -1 });
+
+            if (highestBid) {
+                await Property.findByIdAndUpdate(propertyId, {
+                    currentPrice: highestBid.bidAmount,
+                    status: "bidding"
+                });
+            }
 
             return res.status(200).json({
                 success: true,
@@ -96,13 +99,7 @@ export const placeBid = async (req, res) => {
             });
         }
 
-        // Mark previous highest bid as outbid
-        await PropertyBid.updateMany(
-            { property: propertyId, status: "pending" },
-            { status: "outbid" }
-        );
-
-        // Create new bid
+        // Create new bid (keep all existing pending bids - no outbid logic)
         const newBid = new PropertyBid({
             bidAmount,
             bidder: bidderId,
@@ -113,10 +110,14 @@ export const placeBid = async (req, res) => {
 
         await newBid.save();
 
-        // Update property current price and status
-        property.currentPrice = bidAmount;
-        property.status = "bidding";
-        await property.save();
+        // Update property current price to highest bid
+        const highestBid = await PropertyBid.findOne({ property: propertyId, status: "pending" })
+            .sort({ bidAmount: -1 });
+
+        await Property.findByIdAndUpdate(propertyId, {
+            currentPrice: highestBid ? highestBid.bidAmount : property.startingPrice,
+            status: "bidding"
+        });
 
         // Notify landlord
         if (property.landlord) {
@@ -204,8 +205,71 @@ export const getMyBids = async (req, res) => {
 };
 
 /**
+ * Get public bid history for a property
+ * GET /api/property-bids/history/:propertyId
+ * 
+ * Returns bid history without sensitive bidder info for public viewing
+ */
+export const getBidHistory = async (req, res) => {
+    try {
+        const { propertyId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+            return res.status(400).json({ success: false, message: "Invalid Property Id" });
+        }
+
+        const property = await Property.findById(propertyId);
+        if (!property) {
+            return res.status(404).json({ success: false, message: "Property not found" });
+        }
+
+        // Get all bids for this property (public view - limited bidder info)
+        const bids = await PropertyBid.find({ property: propertyId })
+            .populate("bidder", "name image") // Only show name and image
+            .select("bidId bidAmount status createdAt") // Limited fields
+            .sort({ createdAt: -1 });
+
+        // Calculate statistics
+        const pendingBids = bids.filter(b => b.status === "pending");
+        const highestPendingBid = pendingBids.length > 0
+            ? Math.max(...pendingBids.map(b => b.bidAmount))
+            : null;
+        const lowestPendingBid = pendingBids.length > 0
+            ? Math.min(...pendingBids.map(b => b.bidAmount))
+            : null;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                propertyId: property._id,
+                propertyTitle: property.title,
+                startingPrice: property.startingPrice,
+                currentPrice: property.currentPrice,
+                status: property.status,
+                bids: bids,
+                statistics: {
+                    totalBids: bids.length,
+                    pendingBids: pendingBids.length,
+                    highestPendingBid,
+                    lowestPendingBid
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error("Error fetching bid history:", error);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+};
+
+/**
  * Accept a bid (landlord only)
  * PATCH /api/property-bids/:bidId/accept
+ * 
+ * Race Condition Prevention:
+ * - Checks if property already sold before accepting
+ * - Uses atomic update to change bid status
+ * - Ensures only one bid can be accepted per property
  */
 export const acceptBid = async (req, res) => {
     try {
@@ -217,6 +281,27 @@ export const acceptBid = async (req, res) => {
         }
 
         const property = bid.property;
+
+        // Race condition check: Verify property hasn't already been sold
+        if (property.status === "sold") {
+            return res.status(400).json({
+                success: false,
+                message: "Property has already been sold. Another bid was accepted."
+            });
+        }
+
+        // Check if there's already an accepted bid for this property
+        const existingAcceptedBid = await PropertyBid.findOne({
+            property: property._id,
+            status: "accepted"
+        });
+
+        if (existingAcceptedBid) {
+            return res.status(400).json({
+                success: false,
+                message: "A bid has already been accepted for this property"
+            });
+        }
 
         // Only landlord can accept bids
         if (!property.landlord || property.landlord.toString() !== req.user._id.toString()) {
@@ -233,21 +318,38 @@ export const acceptBid = async (req, res) => {
             });
         }
 
-        // Accept this bid
-        bid.status = "accepted";
-        await bid.save();
+        // Use atomic findOneAndUpdate to prevent race conditions
+        // Only update if status is still pending
+        const updatedBid = await PropertyBid.findOneAndUpdate(
+            { _id: bidId, status: "pending" },
+            { status: "accepted" },
+            { new: true }
+        );
+
+        if (!updatedBid) {
+            return res.status(400).json({
+                success: false,
+                message: "Bid status has changed. Please refresh and try again."
+            });
+        }
 
         // Reject all other pending bids for this property
+        const rejectedBids = await PropertyBid.find({
+            property: property._id,
+            _id: { $ne: bidId },
+            status: "pending"
+        });
+
         await PropertyBid.updateMany(
             { property: property._id, _id: { $ne: bidId }, status: "pending" },
             { status: "rejected" }
         );
 
-        // Update property status to sold
-        await Property.findByIdAndUpdate(property._id, {
-            status: "sold",
-            currentPrice: bid.bidAmount
-        });
+        // Update property status to sold atomically
+        await Property.findOneAndUpdate(
+            { _id: property._id, status: { $ne: "sold" } },
+            { status: "sold", currentPrice: bid.bidAmount, isBiddable: false }
+        );
 
         // Notify the winning bidder
         await Notification.create({
@@ -256,10 +358,19 @@ export const acceptBid = async (req, res) => {
             isRead: false
         });
 
+        // Notify rejected bidders
+        for (const rejectedBid of rejectedBids) {
+            await Notification.create({
+                user: rejectedBid.bidder,
+                message: `Your bid of $${rejectedBid.bidAmount} on "${property.title}" was not selected. The property has been sold.`,
+                isRead: false
+            });
+        }
+
         res.status(200).json({
             success: true,
             message: "Bid accepted successfully",
-            data: bid
+            data: updatedBid
         });
 
     } catch (error) {

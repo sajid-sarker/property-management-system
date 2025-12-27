@@ -3,6 +3,7 @@ import { protect } from "../middlewares/authMiddleware.js";
 import {
     placeBid,
     getBidsForProperty,
+    getBidHistory,
     getMyBids,
     acceptBid,
     rejectBid,
@@ -17,8 +18,11 @@ router.get("/my-bids", protect, getMyBids);
 // Place a bid on a property
 router.post("/property/:propertyId", protect, placeBid);
 
-// Get all bids for a property (landlord only)
+// Get all bids for a property (landlord only - full details)
 router.get("/property/:propertyId", protect, getBidsForProperty);
+
+// Get public bid history for a property (no auth - limited info)
+router.get("/history/:propertyId", getBidHistory);
 
 // Accept a bid (landlord only)
 router.patch("/:bidId/accept", protect, acceptBid);
@@ -30,3 +34,4 @@ router.patch("/:bidId/reject", protect, rejectBid);
 router.delete("/:bidId", protect, withdrawBid);
 
 export default router;
+
