@@ -82,13 +82,43 @@ export const propertyService = {
     return api.post("/properties", payload);
   },
 
-  // Place a bid on a property (for buyers)
+  // Place a bid on a property (for buyers) - uses new bid API
   placeBid: (propertyId, bidData) =>
-    api.post(`/properties/${propertyId}/bid`, bidData),
+    api.post(`/property-bids/property/${propertyId}`, bidData),
 
   // Add a review to a property (for renters)
   addReview: (propertyId, reviewData) =>
     api.post(`/properties/${propertyId}/review`, reviewData),
+
+  // Update property (landlord only)
+  update: (id, data) => api.put(`/properties/${id}`, data),
+};
+
+// ============ PROPERTY BID SERVICE ============
+export const propertyBidService = {
+  // Place a bid on a property
+  placeBid: (propertyId, bidData) =>
+    api.post(`/property-bids/property/${propertyId}`, bidData),
+
+  // Get all bids for a property (landlord only - full details)
+  getBidsForProperty: (propertyId) =>
+    api.get(`/property-bids/property/${propertyId}`),
+
+  // Get public bid history (limited info)
+  getBidHistory: (propertyId) =>
+    api.get(`/property-bids/history/${propertyId}`),
+
+  // Get current user's bids
+  getMyBids: () => api.get("/property-bids/my-bids"),
+
+  // Accept a bid (landlord only)
+  acceptBid: (bidId) => api.patch(`/property-bids/${bidId}/accept`),
+
+  // Reject a bid (landlord only)
+  rejectBid: (bidId) => api.patch(`/property-bids/${bidId}/reject`),
+
+  // Withdraw own bid
+  withdrawBid: (bidId) => api.delete(`/property-bids/${bidId}`),
 };
 
 // ============ AUTH SERVICE ============
