@@ -37,6 +37,9 @@ export const propertyService = {
   // Get all properties from database
   getAll: () => api.get("/properties"),
 
+  // Get landlord's own listings
+  getMyListings: () => api.get("/properties/my-listings"),
+
   // Get single property by ID
   getById: (id) => api.get(`/properties/${id}`),
 
@@ -67,12 +70,14 @@ export const propertyService = {
       beds: parseInt(data.beds) || 0,
       baths: parseInt(data.baths) || 0,
       sqft: data.sqft,
-      price: data.price,
+      price: data.listingType === 'sell' ? (data.startingPrice || data.price) : data.price,
       images: data.image ? [data.image] : data.images || [],
       image: data.image || (data.images && data.images[0]) || "",
       isBoosted: data.isBoosted || false,
-      isForSale: data.type === "For Sale",
-      isForRent: data.type === "For Rent",
+      // New fields for sell/rent
+      listingType: data.listingType || 'rent',
+      startingPrice: data.listingType === 'sell' ? parseInt(data.startingPrice) : undefined,
+      isBiddable: data.listingType === 'sell' ? (data.isBiddable || false) : false,
     };
     return api.post("/properties", payload);
   },
