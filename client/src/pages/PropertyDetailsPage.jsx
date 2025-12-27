@@ -10,6 +10,8 @@ import {
   FaPhone,
   FaEnvelope,
 } from "react-icons/fa";
+import ReviewSection from "../components/properties/ReviewSection";
+import ErrorBoundary from "../components/common/ErrorBoundary";
 
 const PropertyDetailsPage = () => {
   const { id } = useParams();
@@ -21,13 +23,23 @@ const PropertyDetailsPage = () => {
       try {
         // Fetch property by ID from backend
         const response = await propertyService.getById(id);
-        setProperty(response.data);
+        console.log("PropertyDetailsPage - Raw API Response:", response);
+        // Handle both { success: true, data: property } and direct property response
+        const propertyData = response.data?.data || response.data;
+        console.log("PropertyDetailsPage - Extracted propertyData:", propertyData);
+        if (propertyData && typeof propertyData === 'object' && propertyData._id) {
+          setProperty(propertyData);
+        } else {
+          console.error("PropertyDetailsPage - Invalid property data:", propertyData);
+        }
       } catch (error) {
         console.error("Failed to fetch property", error);
         // Fallback: try to get from all properties if getById fails
         try {
           const allResponse = await propertyService.getAll();
-          const found = allResponse.data.find(
+          // Handle both response structures
+          const allData = allResponse.data?.data || allResponse.data || [];
+          const found = (Array.isArray(allData) ? allData : []).find(
             (p) => p._id === id || p.propertyId === id || String(p.id) === id
           );
           if (found) setProperty(found);
@@ -372,59 +384,12 @@ const PropertyDetailsPage = () => {
             </p>
           </div>
 
-          {/* Reviews Section (Req: Renters) */}
-          <div style={{ marginTop: "4rem" }}>
-            <h2
-              style={{
-                marginBottom: "2rem",
-                fontFamily: "var(--font-heading)",
-              }}
-            >
-              Client Reviews
-            </h2>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
-            >
-              {[
-                {
-                  user: "Michael R.",
-                  rating: 5,
-                  comment:
-                    "Absolutely stunning property. The views are breathtaking and the location is perfect.",
-                },
-                {
-                  user: "Elena V.",
-                  rating: 4,
-                  comment:
-                    "Great amenities, especially the rooftop terrace. Parking was a bit tight though.",
-                },
-              ].map((review, i) => (
-                <div
-                  key={i}
-                  style={{
-                    paddingBottom: "2rem",
-                    borderBottom: "1px solid rgba(255,255,255,0.05)",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <div style={{ fontWeight: 600 }}>{review.user}</div>
-                    <div style={{ color: "var(--color-accent)" }}>
-                      {"★".repeat(review.rating)}
-                    </div>
-                  </div>
-                  <p style={{ color: "var(--color-text-light)" }}>
-                    "{review.comment}"
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Reviews Section (Feature 4 of Requirement 3) */}
+          <ReviewSection
+            propertyId={property._id || id}
+            initialReviews={property.reviews || []}
+            initialAverageRating={property.averageRating || 0}
+          />
         </div>
 
         {/* Sidebar / Inquiry Form */}
@@ -565,4 +530,12 @@ const inputStyle = {
   fontFamily: "var(--font-body)",
 };
 
-export default PropertyDetailsPage;
+// Wrapper component with ErrorBoundary
+const PropertyDetailsPageWithErrorBoundary = () => (
+  <ErrorBoundary>
+    <PropertyDetailsPage />
+  </ErrorBoundary>
+);
+
+export default PropertyDetailsPageWithErrorBoundary;
+
