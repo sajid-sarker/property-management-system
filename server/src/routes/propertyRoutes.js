@@ -8,7 +8,9 @@ import {
   getPropertyById,
   updateProperty,
   searchProperties,
-  markInterested
+  markInterested,
+  addReview,
+  getPropertyReviews
 } from "../controllers/propertyController.js";
 
 const router = express.Router();
@@ -35,12 +37,14 @@ router.get("/search", searchProperties);
 
 router.get("/", getProperties);
 router.get("/:id", getPropertyById);
+router.get("/:id/reviews", getPropertyReviews); // Get reviews for a property
 
 // Protected routes
 router.post("/", verifyUser, createProperty);
 router.put("/:id", verifyUser, updateProperty);
 router.delete("/:id", verifyUser, deleteProperty);
 router.post("/:id/interested", verifyUser, markInterested);
+router.post("/:id/review", verifyUser, addReview); // Add review to property
 
 export default router;
 
