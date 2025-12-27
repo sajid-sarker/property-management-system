@@ -305,6 +305,8 @@ export const markInterested = async (req, res) => {
           const notification = await Notification.create({
             user: property.landlord, // Recipient
             message: `${userName} is interested in your property: "${property.title}"`,
+            type: 'general',
+            relatedId: property._id,
             isRead: false
           });
           console.log("[Interest] Notification SAVED successfully:", notification);
