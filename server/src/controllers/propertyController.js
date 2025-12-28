@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 import Property from "../models/Property.js";
+import PropertyBid from "../models/PropertyBid.js";
 import Notification from "../models/Notification.js";
 
 export const getProperties = async (req, res) => {
@@ -10,6 +11,25 @@ export const getProperties = async (req, res) => {
     res.status(200).json({ success: true, data: properties });
   } catch (error) {
     console.log("Error fetching properties:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// [NEW] Get landlord's own properties
+export const getMyProperties = async (req, res) => {
+  try {
+    const landlordId = req.user._id;
+
+    const properties = await Property.find({ landlord: landlordId })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: properties,
+      count: properties.length
+    });
+  } catch (error) {
+    console.log("Error fetching landlord properties:", error.message);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
@@ -52,10 +72,51 @@ export const createProperty = async (req, res) => {
     console.log("Assigned landlord from req.user:", property.landlord);
   }
 
-  if (!property.title || !property.description || !property.price || !property.images) {
+  // Basic required fields validation
+  if (!property.title || !property.description || !property.images) {
     return res
       .status(400)
-      .json({ success: false, message: "Please provide all fields (title, description, price, images)" });
+      .json({ success: false, message: "Please provide all fields (title, description, images)" });
+  }
+
+  // Validate listingType
+  const listingType = property.listingType || "rent";
+  if (!["sell", "rent"].includes(listingType)) {
+    return res.status(400).json({
+      success: false,
+      message: "listingType must be 'sell' or 'rent'"
+    });
+  }
+  property.listingType = listingType;
+
+  // For SELL listings: startingPrice is required
+  if (listingType === "sell") {
+    if (!property.startingPrice || property.startingPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "startingPrice is required for properties listed for sale"
+      });
+    }
+    // Set currentPrice to startingPrice initially
+    property.currentPrice = property.currentPrice || property.startingPrice;
+    // Set price field for backward compatibility
+    property.price = property.price || property.startingPrice;
+  } else {
+    // For RENT listings: price (monthly rent) is required
+    if (!property.price || property.price <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "price (monthly rent) is required for rental properties"
+      });
+    }
+    property.currentPrice = property.price;
+    // isBiddable should be false for rent listings
+    property.isBiddable = false;
+  }
+
+  // If isBiddable is true, set status to 'bidding'
+  if (property.isBiddable && listingType === "sell") {
+    property.status = "bidding";
   }
 
   const newProperty = new Property(property);
@@ -73,7 +134,7 @@ export const createProperty = async (req, res) => {
 export const updateProperty = async (req, res) => {
   const { id } = req.params;
 
-  const property = req.body;
+  const propertyData = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res
@@ -82,12 +143,87 @@ export const updateProperty = async (req, res) => {
   }
 
   try {
-    const updatedProperty = await Property.findByIdAndUpdate(id, property, {
+    // [NEW] Ownership verification - only landlord can edit
+    const existingProperty = await Property.findById(id);
+
+    if (!existingProperty) {
+      return res.status(404).json({ success: false, message: "Property not found" });
+    }
+
+    // Strict ownership verification (if landlord exists and user is authenticated)
+    if (existingProperty.landlord && req.user) {
+      if (existingProperty.landlord.toString() !== req.user._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to edit this property"
+        });
+      }
+    }
+
+    // Prevent changing listingType after creation (to maintain data integrity)
+    if (propertyData.listingType && propertyData.listingType !== existingProperty.listingType) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot change listingType after property creation. Please delete and recreate the listing."
+      });
+    }
+
+    // Validate startingPrice update (only for sell listings)
+    if (propertyData.startingPrice !== undefined) {
+      if (existingProperty.listingType !== "sell") {
+        return res.status(400).json({
+          success: false,
+          message: "startingPrice can only be updated for properties listed for sale"
+        });
+      }
+      if (propertyData.startingPrice <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "startingPrice must be a positive number"
+        });
+      }
+      // Update currentPrice if no bids have been placed yet (currentPrice equals startingPrice)
+      if (existingProperty.currentPrice === existingProperty.startingPrice) {
+        propertyData.currentPrice = propertyData.startingPrice;
+      }
+      // Also update price for backward compatibility
+      propertyData.price = propertyData.startingPrice;
+    }
+
+    // Validate price update (for rent listings)
+    if (propertyData.price !== undefined && existingProperty.listingType === "rent") {
+      if (propertyData.price <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "price must be a positive number"
+        });
+      }
+      propertyData.currentPrice = propertyData.price;
+    }
+
+    // Prevent enabling isBiddable for rent listings
+    if (propertyData.isBiddable === true && existingProperty.listingType === "rent") {
+      return res.status(400).json({
+        success: false,
+        message: "Bidding can only be enabled for properties listed for sale"
+      });
+    }
+
+    // Update bidding status
+    if (propertyData.isBiddable === true && existingProperty.listingType === "sell") {
+      propertyData.status = "bidding";
+    } else if (propertyData.isBiddable === false && existingProperty.status === "bidding") {
+      propertyData.status = "available";
+    }
+
+    const updatedProperty = await Property.findByIdAndUpdate(id, propertyData, {
       new: true,
+      runValidators: true
     });
     res.status(200).json({ success: true, data: updatedProperty });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error updating property:", error);
+    res.status(500).json({ success: false, message: error.message || "Server Error" });
   }
 };
 
@@ -113,8 +249,28 @@ export const deleteProperty = async (req, res) => {
       return res.status(403).json({ success: false, message: "Not authorized to delete this property" });
     }
 
+    // Cascade delete: Remove all bids associated with this property
+    const deletedBids = await PropertyBid.find({ property: id });
+
+    // Notify bidders that the listing was cancelled
+    for (const bid of deletedBids) {
+      if (bid.status === "pending") {
+        await Notification.create({
+          user: bid.bidder,
+          message: `The property listing "${property.title}" has been cancelled by the landlord. Your bid of $${bid.bidAmount} is no longer active.`,
+          isRead: false
+        });
+      }
+    }
+
+    await PropertyBid.deleteMany({ property: id });
     await Property.findByIdAndDelete(id);
-    res.status(200).json({ success: true, message: "Property deleted" });
+
+    res.status(200).json({
+      success: true,
+      message: "Property and associated bids deleted",
+      deletedBidsCount: deletedBids.length
+    });
   } catch (error) {
     console.log("error in deleting property:", error.message);
     res.status(500).json({ success: false, message: "Server Error" });
@@ -149,6 +305,8 @@ export const markInterested = async (req, res) => {
           const notification = await Notification.create({
             user: property.landlord, // Recipient
             message: `${userName} is interested in your property: "${property.title}"`,
+            type: 'general',
+            relatedId: property._id,
             isRead: false
           });
           console.log("[Interest] Notification SAVED successfully:", notification);

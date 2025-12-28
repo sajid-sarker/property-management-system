@@ -68,8 +68,32 @@ const propertySchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["available", "sold", "rented", "pending"],
+      enum: ["available", "sold", "rented", "pending", "bidding"],
       default: "available",
+    },
+    
+    // Listing type - determines if property is for sale or rent
+    listingType: {
+      type: String,
+      enum: ["sell", "rent"],
+      default: "rent",
+    },
+    
+    // Starting/asking price for sell properties (base for bidding)
+    startingPrice: {
+      type: Number,
+      required: function() { return this.listingType === "sell"; },
+    },
+    
+    // Current price - for rent: monthly rent; for sell: current highest bid or asking price
+    currentPrice: {
+      type: Number,
+    },
+    
+    // Whether the property accepts bids (only applicable for sell listings)
+    isBiddable: {
+      type: Boolean,
+      default: false,
     },
     priority: {
       type: Number,
