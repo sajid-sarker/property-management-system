@@ -5,6 +5,7 @@ import { connectDB } from "./config/db.js";
 import propertyRoutes from "./routes/propertyRoutes.js";
 import boostRoutes from "./routes/boostRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import propertyBidRoutes from "./routes/propertyBidRoutes.js";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use(express.json()); // Allows us to use JSON data in req.body
 app.use("/api/users", authRoutes);  // Auth routes (login, register)
 app.use("/api/properties", propertyRoutes);
 app.use("/api/boosts", boostRoutes);
+app.use("/api/property-bids", propertyBidRoutes);
 app.use("/api/upload", uploadRoutes);
 
 // Make the uploads folder static

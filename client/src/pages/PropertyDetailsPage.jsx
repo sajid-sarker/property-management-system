@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import { propertyService } from "../services/api";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { propertyService, propertyBidService } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 import {
   FaMapMarkerAlt,
   FaBed,
@@ -9,14 +10,22 @@ import {
   FaCheck,
   FaPhone,
   FaEnvelope,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
 import ReviewSection from "../components/properties/ReviewSection";
+import BidHistorySection from "../components/properties/BidHistorySection";
 import ErrorBoundary from "../components/common/ErrorBoundary";
 
 const PropertyDetailsPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [bidAmount, setBidAmount] = useState('');
+  const [bidMessage, setBidMessage] = useState('');
+  const [submittingBid, setSubmittingBid] = useState(false);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -92,9 +101,51 @@ const PropertyDetailsPage = () => {
     (property.address &&
       `${property.address.street || ""}, ${property.address.city || ""}`) ||
     "Location N/A";
-  const priceText = property.price || property.rentPrice || "Price N/A";
-  const typeText =
-    property.type || (property.isForSale ? "For Sale" : "For Rent");
+
+  // Display price based on listing type
+  const priceText = property.listingType === 'sell'
+    ? `$${(property.currentPrice || property.startingPrice || property.price)?.toLocaleString()}`
+    : `$${property.price?.toLocaleString()}/mo`;
+
+  const typeText = property.listingType === 'sell' ? 'For Sale' : 'For Rent';
+
+  // Check if current user is the landlord (owner)
+  const landlordId = property.landlord?._id || property.landlord;
+  const userId = user?._id || user?.userId || user?.id;
+  const isOwner = landlordId && userId && landlordId.toString() === userId.toString();
+
+  // Handle placing a bid
+  const handlePlaceBid = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert('Please log in to place a bid');
+      navigate('/login');
+      return;
+    }
+    if (!bidAmount || bidAmount <= 0) {
+      alert('Please enter a valid bid amount');
+      return;
+    }
+
+    setSubmittingBid(true);
+    try {
+      await propertyBidService.placeBid(id, {
+        bidAmount: parseInt(bidAmount),
+        message: bidMessage
+      });
+      alert('Bid placed successfully!');
+      setBidAmount('');
+      setBidMessage('');
+      // Refresh property to get updated currentPrice
+      const response = await propertyService.getById(id);
+      const propertyData = response.data?.data || response.data;
+      if (propertyData) setProperty(propertyData);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to place bid');
+    } finally {
+      setSubmittingBid(false);
+    }
+  };
 
   return (
     <div
@@ -110,13 +161,32 @@ const PropertyDetailsPage = () => {
           <Link to="/" className="logo">
             Luxe<span className="text-accent">Estate</span>
           </Link>
-          <Link
-            to="/properties"
-            className="btn btn-outline"
-            style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
-          >
-            Back to Listings
-          </Link>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {isOwner && (
+              <>
+                <Link
+                  to={`/edit-property/${id}`}
+                  className="btn btn-outline"
+                  style={{
+                    fontSize: "0.8rem",
+                    padding: "0.5rem 1rem",
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <FaEdit /> Edit Listing
+                </Link>
+              </>
+            )}
+            <Link
+              to="/properties"
+              className="btn btn-outline"
+              style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+            >
+              Back to Listings
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -331,58 +401,110 @@ const PropertyDetailsPage = () => {
             </div>
           </div>
 
-          {/* Bidding Section (Req: Buyers) */}
-          <div
-            style={{
-              marginTop: "4rem",
-              padding: "2rem",
-              background: "var(--color-primary-light)",
-              borderRadius: "12px",
-              border: "1px solid rgba(255,255,255,0.05)",
-            }}
-          >
-            <h2
-              style={{
-                marginBottom: "1.5rem",
-                fontFamily: "var(--font-heading)",
-              }}
-            >
-              Place a Bid
-            </h2>
+          {/* Bidding Section (Only for sale listings, not for owner) */}
+          {property.listingType === 'sell' && property.isBiddable && !isOwner && (
             <div
               style={{
-                display: "flex",
-                gap: "1rem",
-                alignItems: "flex-end",
-                flexWrap: "wrap",
+                marginTop: "4rem",
+                padding: "2rem",
+                background: "var(--color-primary-light)",
+                borderRadius: "12px",
+                border: "1px solid rgba(255,255,255,0.05)",
               }}
             >
-              <div style={{ flex: 1, minWidth: "200px" }}>
-                <label
+              <h2
+                style={{
+                  marginBottom: "1.5rem",
+                  fontFamily: "var(--font-heading)",
+                }}
+              >
+                Place a Bid
+              </h2>
+              <form onSubmit={handlePlaceBid}>
+                <div
                   style={{
-                    display: "block",
-                    color: "var(--color-text-light)",
-                    marginBottom: "0.5rem",
-                    fontSize: "0.9rem",
+                    display: "flex",
+                    gap: "1rem",
+                    alignItems: "flex-end",
+                    flexWrap: "wrap",
                   }}
                 >
-                  Your Offer Price
-                </label>
-                <input type="text" placeholder="$0.00" style={inputStyle} />
-              </div>
-              <button className="btn btn-primary">Submit Offer</button>
+                  <div style={{ flex: 1, minWidth: "200px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "var(--color-text-light)",
+                        marginBottom: "0.5rem",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      Your Bid Amount ($)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Enter amount"
+                      value={bidAmount}
+                      onChange={(e) => setBidAmount(e.target.value)}
+                      style={inputStyle}
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={submittingBid}
+                  >
+                    {submittingBid ? 'Submitting...' : 'Submit Bid'}
+                  </button>
+                </div>
+                <div style={{ marginTop: "1rem" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      color: "var(--color-text-light)",
+                      marginBottom: "0.5rem",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    Message (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Add a message to the seller..."
+                    value={bidMessage}
+                    onChange={(e) => setBidMessage(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              </form>
+              <p
+                style={{
+                  marginTop: "1rem",
+                  color: "var(--color-text-light)",
+                  fontSize: "0.9rem",
+                }}
+              >
+                * Current price:{" "}
+                <span style={{ color: "var(--color-accent)", fontWeight: 600 }}>
+                  ${(property.currentPrice || property.startingPrice)?.toLocaleString()}
+                </span>
+              </p>
             </div>
-            <p
-              style={{
-                marginTop: "1rem",
-                color: "var(--color-text-light)",
-                fontSize: "0.9rem",
-              }}
-            >
-              * Current highest offer is{" "}
-              <span style={{ color: "var(--color-accent)" }}>$24,000,000</span>
-            </p>
-          </div>
+          )}
+
+          {/* Bid History Section (For Sell listings) */}
+          <BidHistorySection
+            propertyId={property._id || id}
+            isOwner={isOwner}
+            listingType={property.listingType}
+            onBidAccepted={() => {
+              // Refresh property when bid is accepted
+              propertyService.getById(id).then(res => {
+                const data = res.data?.data || res.data;
+                if (data) setProperty(data);
+              });
+            }}
+          />
 
           {/* Reviews Section (Feature 4 of Requirement 3) */}
           <ReviewSection

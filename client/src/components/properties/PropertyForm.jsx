@@ -38,6 +38,10 @@ const PropertyForm = ({
         sqft: initialData.sqft || '',
         description: initialData.description || '',
         image: initialData.image || '',
+        // New fields for sell/rent
+        listingType: initialData.listingType || 'rent',
+        startingPrice: initialData.startingPrice || '',
+        isBiddable: initialData.isBiddable || false,
     });
 
     const handleChange = (e) => {
@@ -92,6 +96,122 @@ const PropertyForm = ({
                         {...inputStyles}
                     />
                 </GridItem>
+
+                {/* Listing Type - For Sell / For Rent Radio */}
+                <GridItem colSpan={{ base: 1, md: 2 }}>
+                    <Text {...labelStyles}>Listing Type</Text>
+                    <HStack gap="6" mt="2">
+                        <Box
+                            as="label"
+                            display="flex"
+                            alignItems="center"
+                            gap="3"
+                            cursor="pointer"
+                            p="4"
+                            borderRadius="8px"
+                            bg={formData.listingType === 'rent' ? 'rgba(212, 175, 55, 0.15)' : 'rgba(0, 0, 0, 0.3)'}
+                            border={formData.listingType === 'rent' ? '2px solid #d4af37' : '1px solid rgba(255, 255, 255, 0.1)'}
+                            transition="all 0.2s ease"
+                            flex="1"
+                            _hover={{ borderColor: '#d4af37' }}
+                        >
+                            <Box
+                                as="input"
+                                type="radio"
+                                name="listingType"
+                                value="rent"
+                                checked={formData.listingType === 'rent'}
+                                onChange={handleChange}
+                                accentColor="#d4af37"
+                                width="18px"
+                                height="18px"
+                            />
+                            <Box>
+                                <Text color="white" fontWeight="600">For Rent</Text>
+                                <Text color="#a0a0a0" fontSize="sm">Monthly rental listing</Text>
+                            </Box>
+                        </Box>
+                        <Box
+                            as="label"
+                            display="flex"
+                            alignItems="center"
+                            gap="3"
+                            cursor="pointer"
+                            p="4"
+                            borderRadius="8px"
+                            bg={formData.listingType === 'sell' ? 'rgba(212, 175, 55, 0.15)' : 'rgba(0, 0, 0, 0.3)'}
+                            border={formData.listingType === 'sell' ? '2px solid #d4af37' : '1px solid rgba(255, 255, 255, 0.1)'}
+                            transition="all 0.2s ease"
+                            flex="1"
+                            _hover={{ borderColor: '#d4af37' }}
+                        >
+                            <Box
+                                as="input"
+                                type="radio"
+                                name="listingType"
+                                value="sell"
+                                checked={formData.listingType === 'sell'}
+                                onChange={handleChange}
+                                accentColor="#d4af37"
+                                width="18px"
+                                height="18px"
+                            />
+                            <Box>
+                                <Text color="white" fontWeight="600">For Sell</Text>
+                                <Text color="#a0a0a0" fontSize="sm">Property for sale</Text>
+                            </Box>
+                        </Box>
+                    </HStack>
+                </GridItem>
+
+                {/* Conditional: Starting Price & Biddable (For Sell only) */}
+                {formData.listingType === 'sell' && (
+                    <>
+                        <GridItem>
+                            <Text {...labelStyles}>Starting Price *</Text>
+                            <Input
+                                name="startingPrice"
+                                type="number"
+                                value={formData.startingPrice}
+                                onChange={handleChange}
+                                placeholder="e.g. 5000000"
+                                required
+                                {...inputStyles}
+                            />
+                        </GridItem>
+                        <GridItem>
+                            <Text {...labelStyles}>Accept Bids?</Text>
+                            <Box
+                                as="label"
+                                display="flex"
+                                alignItems="center"
+                                gap="3"
+                                cursor="pointer"
+                                p="4"
+                                borderRadius="8px"
+                                bg={formData.isBiddable ? 'rgba(212, 175, 55, 0.15)' : 'rgba(0, 0, 0, 0.3)'}
+                                border={formData.isBiddable ? '2px solid #d4af37' : '1px solid rgba(255, 255, 255, 0.1)'}
+                                transition="all 0.2s ease"
+                                _hover={{ borderColor: '#d4af37' }}
+                            >
+                                <Box
+                                    as="input"
+                                    type="checkbox"
+                                    name="isBiddable"
+                                    checked={formData.isBiddable}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, isBiddable: e.target.checked }))}
+                                    accentColor="#d4af37"
+                                    width="18px"
+                                    height="18px"
+                                />
+                                <Box>
+                                    <Text color="white" fontWeight="600">Enable Bidding</Text>
+                                    <Text color="#a0a0a0" fontSize="sm">Allow buyers to place bids</Text>
+                                </Box>
+                            </Box>
+                        </GridItem>
+                    </>
+                )}
 
                 {/* Street Address - Full Width */}
                 <GridItem colSpan={{ base: 1, md: 2 }}>
