@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import { propertyService } from "../services/api";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { propertyService, propertyBidService, messageService } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 import {
   FaMapMarkerAlt,
   FaBed,
@@ -9,25 +10,46 @@ import {
   FaCheck,
   FaPhone,
   FaEnvelope,
+  FaEdit,
+  FaTrash,
 } from "react-icons/fa";
+import ReviewSection from "../components/properties/ReviewSection";
+import BidHistorySection from "../components/properties/BidHistorySection";
+import ErrorBoundary from "../components/common/ErrorBoundary";
+import Navbar from "../components/common/Navbar";
 
 const PropertyDetailsPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [bidAmount, setBidAmount] = useState('');
+  const [bidMessage, setBidMessage] = useState('');
+  const [submittingBid, setSubmittingBid] = useState(false);
 
   useEffect(() => {
     const fetchProperty = async () => {
       try {
         // Fetch property by ID from backend
         const response = await propertyService.getById(id);
-        setProperty(response.data);
+        console.log("PropertyDetailsPage - Raw API Response:", response);
+        // Handle both { success: true, data: property } and direct property response
+        const propertyData = response.data?.data || response.data;
+        console.log("PropertyDetailsPage - Extracted propertyData:", propertyData);
+        if (propertyData && typeof propertyData === 'object' && propertyData._id) {
+          setProperty(propertyData);
+        } else {
+          console.error("PropertyDetailsPage - Invalid property data:", propertyData);
+        }
       } catch (error) {
         console.error("Failed to fetch property", error);
         // Fallback: try to get from all properties if getById fails
         try {
           const allResponse = await propertyService.getAll();
-          const found = allResponse.data.find(
+          // Handle both response structures
+          const allData = allResponse.data?.data || allResponse.data || [];
+          const found = (Array.isArray(allData) ? allData : []).find(
             (p) => p._id === id || p.propertyId === id || String(p.id) === id
           );
           if (found) setProperty(found);
@@ -80,9 +102,51 @@ const PropertyDetailsPage = () => {
     (property.address &&
       `${property.address.street || ""}, ${property.address.city || ""}`) ||
     "Location N/A";
-  const priceText = property.price || property.rentPrice || "Price N/A";
-  const typeText =
-    property.type || (property.isForSale ? "For Sale" : "For Rent");
+
+  // Display price based on listing type
+  const priceText = property.listingType === 'sell'
+    ? `$${(property.currentPrice || property.startingPrice || property.price)?.toLocaleString()}`
+    : `$${property.price?.toLocaleString()}/mo`;
+
+  const typeText = property.listingType === 'sell' ? 'For Sale' : 'For Rent';
+
+  // Check if current user is the landlord (owner)
+  const landlordId = property.landlord?._id || property.landlord;
+  const userId = user?._id || user?.userId || user?.id;
+  const isOwner = landlordId && userId && landlordId.toString() === userId.toString();
+
+  // Handle placing a bid
+  const handlePlaceBid = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert('Please log in to place a bid');
+      navigate('/login');
+      return;
+    }
+    if (!bidAmount || bidAmount <= 0) {
+      alert('Please enter a valid bid amount');
+      return;
+    }
+
+    setSubmittingBid(true);
+    try {
+      await propertyBidService.placeBid(id, {
+        bidAmount: parseInt(bidAmount),
+        message: bidMessage
+      });
+      alert('Bid placed successfully!');
+      setBidAmount('');
+      setBidMessage('');
+      // Refresh property to get updated currentPrice
+      const response = await propertyService.getById(id);
+      const propertyData = response.data?.data || response.data;
+      if (propertyData) setProperty(propertyData);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to place bid');
+    } finally {
+      setSubmittingBid(false);
+    }
+  };
 
   return (
     <div
@@ -92,21 +156,7 @@ const PropertyDetailsPage = () => {
         color: "var(--color-text-main)",
       }}
     >
-      {/* Navbar (Simplified) */}
-      <nav className="navbar scrolled" style={{ position: "sticky" }}>
-        <div className="container nav-content">
-          <Link to="/" className="logo">
-            Luxe<span className="text-accent">Estate</span>
-          </Link>
-          <Link
-            to="/properties"
-            className="btn btn-outline"
-            style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
-          >
-            Back to Listings
-          </Link>
-        </div>
-      </nav>
+      <Navbar variant="solid" />
 
       <div
         className="container"
@@ -319,115 +369,120 @@ const PropertyDetailsPage = () => {
             </div>
           </div>
 
-          {/* Bidding Section (Req: Buyers) */}
-          <div
-            style={{
-              marginTop: "4rem",
-              padding: "2rem",
-              background: "var(--color-primary-light)",
-              borderRadius: "12px",
-              border: "1px solid rgba(255,255,255,0.05)",
-            }}
-          >
-            <h2
-              style={{
-                marginBottom: "1.5rem",
-                fontFamily: "var(--font-heading)",
-              }}
-            >
-              Place a Bid
-            </h2>
+          {/* Bidding Section (Only for sale listings, not for owner) */}
+          {property.listingType === 'sell' && property.isBiddable && !isOwner && (
             <div
               style={{
-                display: "flex",
-                gap: "1rem",
-                alignItems: "flex-end",
-                flexWrap: "wrap",
+                marginTop: "4rem",
+                padding: "2rem",
+                background: "var(--color-primary-light)",
+                borderRadius: "12px",
+                border: "1px solid rgba(255,255,255,0.05)",
               }}
             >
-              <div style={{ flex: 1, minWidth: "200px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "var(--color-text-light)",
-                    marginBottom: "0.5rem",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  Your Offer Price
-                </label>
-                <input type="text" placeholder="$0.00" style={inputStyle} />
-              </div>
-              <button className="btn btn-primary">Submit Offer</button>
-            </div>
-            <p
-              style={{
-                marginTop: "1rem",
-                color: "var(--color-text-light)",
-                fontSize: "0.9rem",
-              }}
-            >
-              * Current highest offer is{" "}
-              <span style={{ color: "var(--color-accent)" }}>$24,000,000</span>
-            </p>
-          </div>
-
-          {/* Reviews Section (Req: Renters) */}
-          <div style={{ marginTop: "4rem" }}>
-            <h2
-              style={{
-                marginBottom: "2rem",
-                fontFamily: "var(--font-heading)",
-              }}
-            >
-              Client Reviews
-            </h2>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
-            >
-              {[
-                {
-                  user: "Michael R.",
-                  rating: 5,
-                  comment:
-                    "Absolutely stunning property. The views are breathtaking and the location is perfect.",
-                },
-                {
-                  user: "Elena V.",
-                  rating: 4,
-                  comment:
-                    "Great amenities, especially the rooftop terrace. Parking was a bit tight though.",
-                },
-              ].map((review, i) => (
+              <h2
+                style={{
+                  marginBottom: "1.5rem",
+                  fontFamily: "var(--font-heading)",
+                }}
+              >
+                Place a Bid
+              </h2>
+              <form onSubmit={handlePlaceBid}>
                 <div
-                  key={i}
                   style={{
-                    paddingBottom: "2rem",
-                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    display: "flex",
+                    gap: "1rem",
+                    alignItems: "flex-end",
+                    flexWrap: "wrap",
                   }}
                 >
-                  <div
+                  <div style={{ flex: 1, minWidth: "200px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        color: "var(--color-text-light)",
+                        marginBottom: "0.5rem",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      Your Bid Amount ($)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Enter amount"
+                      value={bidAmount}
+                      onChange={(e) => setBidAmount(e.target.value)}
+                      style={inputStyle}
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={submittingBid}
+                  >
+                    {submittingBid ? 'Submitting...' : 'Submit Bid'}
+                  </button>
+                </div>
+                <div style={{ marginTop: "1rem" }}>
+                  <label
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
+                      display: "block",
+                      color: "var(--color-text-light)",
                       marginBottom: "0.5rem",
+                      fontSize: "0.9rem",
                     }}
                   >
-                    <div style={{ fontWeight: 600 }}>{review.user}</div>
-                    <div style={{ color: "var(--color-accent)" }}>
-                      {"★".repeat(review.rating)}
-                    </div>
-                  </div>
-                  <p style={{ color: "var(--color-text-light)" }}>
-                    "{review.comment}"
-                  </p>
+                    Message (optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Add a message to the seller..."
+                    value={bidMessage}
+                    onChange={(e) => setBidMessage(e.target.value)}
+                    style={inputStyle}
+                  />
                 </div>
-              ))}
+              </form>
+              <p
+                style={{
+                  marginTop: "1rem",
+                  color: "var(--color-text-light)",
+                  fontSize: "0.9rem",
+                }}
+              >
+                * Current price:{" "}
+                <span style={{ color: "var(--color-accent)", fontWeight: 600 }}>
+                  ${(property.currentPrice || property.startingPrice)?.toLocaleString()}
+                </span>
+              </p>
             </div>
-          </div>
+          )}
+
+          {/* Bid History Section (For Sell listings) */}
+          <BidHistorySection
+            propertyId={property._id || id}
+            isOwner={isOwner}
+            listingType={property.listingType}
+            onBidAccepted={() => {
+              // Refresh property when bid is accepted
+              propertyService.getById(id).then(res => {
+                const data = res.data?.data || res.data;
+                if (data) setProperty(data);
+              });
+            }}
+          />
+
+          {/* Reviews Section (Feature 4 of Requirement 3) */}
+          <ReviewSection
+            propertyId={property._id || id}
+            initialReviews={property.reviews || []}
+            initialAverageRating={property.averageRating || 0}
+          />
         </div>
 
-        {/* Sidebar / Inquiry Form */}
+        {/* Sidebar / Contact Landlord */}
         <div>
           <div
             style={{
@@ -446,56 +501,99 @@ const PropertyDetailsPage = () => {
                 color: "white",
               }}
             >
-              Interested?
+              Contact Landlord
             </h3>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "2rem",
-              }}
-            >
-              <img
-                src="https://randomuser.me/api/portraits/women/44.jpg"
-                alt="Agent"
+            
+            {/* Landlord Info */}
+            {property.landlord && (
+              <div
                 style={{
-                  width: "60px",
-                  height: "60px",
-                  borderRadius: "50%",
-                  border: "2px solid var(--color-accent)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "2rem",
                 }}
-              />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
-                  Sarah Jenkins
-                </div>
-                <div
+              >
+                <img
+                  src={property.landlord.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(property.landlord.name || 'Owner')}&background=d4af37&color=0a0a0f`}
+                  alt="Landlord"
                   style={{
-                    color: "var(--color-text-light)",
-                    fontSize: "0.9rem",
+                    width: "60px",
+                    height: "60px",
+                    borderRadius: "50%",
+                    border: "2px solid var(--color-accent)",
                   }}
-                >
-                  Luxury Estate Agent
+                />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
+                    {property.landlord.name || "Property Owner"}
+                  </div>
+                  <div
+                    style={{
+                      color: "var(--color-text-light)",
+                      fontSize: "0.9rem",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {property.landlord.role || "Landlord"}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <form
-              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-            >
-              <input type="text" placeholder="Your Name" style={inputStyle} />
-              <input type="email" placeholder="Your Email" style={inputStyle} />
-              <input type="tel" placeholder="Your Phone" style={inputStyle} />
-              <textarea
-                placeholder="I'm interested in this property..."
-                rows="4"
-                style={inputStyle}
-              ></textarea>
-              <button className="btn btn-primary" style={{ width: "100%" }}>
-                Schedule Viewing
-              </button>
-            </form>
+            {/* Message Form */}
+            {user && property.landlord && property.landlord._id !== user._id && property.landlord._id !== user.id ? (
+              <form
+                style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const messageContent = e.target.message.value.trim();
+                  if (!messageContent) {
+                    alert("Please enter a message");
+                    return;
+                  }
+                  try {
+                    await messageService.send({
+                      receiverId: property.landlord._id,
+                      content: messageContent,
+                      propertyId: property._id || id,
+                    });
+                    alert("Message sent to landlord!");
+                    e.target.reset();
+                  } catch (error) {
+                    console.error("Failed to send message:", error);
+                    console.error("Error response:", error.response?.data);
+                    const errorMsg = error.response?.data?.message || error.message || "Unknown error";
+                    alert(`Failed to send message: ${errorMsg}`);
+                  }
+                }}
+              >
+                <textarea
+                  name="message"
+                  placeholder={`Hi, I'm interested in "${property.title || 'this property'}"...`}
+                  rows="4"
+                  style={inputStyle}
+                ></textarea>
+                <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>
+                  💬 Send Message
+                </button>
+              </form>
+            ) : !user ? (
+              <div style={{ textAlign: "center", color: "var(--color-text-light)" }}>
+                <p style={{ marginBottom: "1rem" }}>Please log in to contact the landlord</p>
+                <button
+                  className="btn btn-outline"
+                  style={{ width: "100%" }}
+                  onClick={() => navigate("/login")}
+                >
+                  Log In
+                </button>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", color: "var(--color-text-light)" }}>
+                <p>This is your property listing.</p>
+              </div>
+            )}
 
             <div
               style={{
@@ -526,26 +624,16 @@ const PropertyDetailsPage = () => {
                 👋 I'm Interested
               </button>
 
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  color: "var(--color-text-light)",
-                }}
-              >
-                <FaPhone className="text-accent" /> +1 (555) 123-4567
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  color: "var(--color-text-light)",
-                }}
-              >
-                <FaEnvelope className="text-accent" /> s.jenkins@luxeestate.com
-              </div>
+              {/* View All Messages with Landlord */}
+              {user && property.landlord && property.landlord._id !== user._id && property.landlord._id !== user.id && (
+                <button
+                  className="btn btn-outline"
+                  style={{ width: "100%" }}
+                  onClick={() => navigate(`/messages?user=${property.landlord._id}`)}
+                >
+                  📨 View Conversation
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -565,4 +653,12 @@ const inputStyle = {
   fontFamily: "var(--font-body)",
 };
 
-export default PropertyDetailsPage;
+// Wrapper component with ErrorBoundary
+const PropertyDetailsPageWithErrorBoundary = () => (
+  <ErrorBoundary>
+    <PropertyDetailsPage />
+  </ErrorBoundary>
+);
+
+export default PropertyDetailsPageWithErrorBoundary;
+

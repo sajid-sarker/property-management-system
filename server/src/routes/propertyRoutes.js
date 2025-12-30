@@ -6,9 +6,12 @@ import {
   deleteProperty,
   getProperties,
   getPropertyById,
+  getMyProperties,
   updateProperty,
   searchProperties,
-  markInterested
+  markInterested,
+  addReview,
+  getPropertyReviews
 } from "../controllers/propertyController.js";
 
 const router = express.Router();
@@ -33,14 +36,19 @@ router.get("/notifications/mine", verifyUser, async (req, res) => {
 // Search route must be before /:id to prevent "search" being treated as an id
 router.get("/search", searchProperties);
 
+// Landlord's own properties (must be before /:id)
+router.get("/my-listings", verifyUser, getMyProperties);
+
 router.get("/", getProperties);
 router.get("/:id", getPropertyById);
+router.get("/:id/reviews", getPropertyReviews); // Get reviews for a property
 
 // Protected routes
 router.post("/", verifyUser, createProperty);
 router.put("/:id", verifyUser, updateProperty);
 router.delete("/:id", verifyUser, deleteProperty);
 router.post("/:id/interested", verifyUser, markInterested);
+router.post("/:id/review", verifyUser, addReview); // Add review to property
 
 export default router;
 

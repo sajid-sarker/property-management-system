@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Grid, Flex, Text, Heading, HStack, Input } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { propertyService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 // Import reusable components
 import Navbar from '../components/common/Navbar';
@@ -15,7 +16,9 @@ import PropertyCard from '../components/properties/PropertyCard';
  * Uses reusable components: Navbar, Footer, Button, PropertyCard
  */
 const Properties = () => {
+    const { user } = useAuth();
     const [properties, setProperties] = useState([]);
+    const [myListings, setMyListings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterType, setFilterType] = useState('all'); // Renamed from filter to filterType to avoid confusion
 
@@ -49,7 +52,14 @@ const Properties = () => {
         }
     };
 
+    const isLandlord = user?.role === 'landlord';
+
     useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    useEffect(() => {
+      // Raiyan changes start here
         fetchProperties();
     }, []); // Initial load
 
@@ -65,6 +75,45 @@ const Properties = () => {
         if (filterType === 'rent') return propType.includes('rent') || p.isForRent;
         return true;
     });
+  // Raiyan changes end here
+  
+//         const fetchProperties = async () => {
+//             try {
+//                 const response = await propertyService.getAll();
+//                 // Handle both { success: true, data: [...] } and direct array responses
+//                 const data = response.data?.data || response.data || [];
+//                 setProperties(Array.isArray(data) ? data : []);
+
+//                 // Fetch my listings if user is landlord
+//                 if (isLandlord) {
+//                     try {
+//                         const myResponse = await propertyService.getMyListings();
+//                         const myData = myResponse.data?.data || myResponse.data || [];
+//                         setMyListings(Array.isArray(myData) ? myData : []);
+//                     } catch (err) {
+//                         console.error('Failed to fetch my listings', err);
+//                     }
+//                 }
+//             } catch (error) {
+//                 console.error('Failed to fetch properties', error);
+//                 setProperties([]);
+//             } finally {
+//                 setLoading(false);
+//             }
+//         };
+//         fetchProperties();
+//     }, [isLandlord]);
+
+//     // Filter properties based on selection
+//     const filteredProperties = filter === 'my-listings'
+//         ? myListings
+//         : properties.filter((p) => {
+//             if (filter === 'all') return true;
+//             const listingType = p.listingType || (p.isForSale ? 'sell' : 'rent');
+//             if (filter === 'sell') return listingType === 'sell';
+//             if (filter === 'rent') return listingType === 'rent';
+//             return true;
+//         });
 
     return (
         <Box bg="#0a0a0f" minH="100vh" color="white">
@@ -102,6 +151,7 @@ const Properties = () => {
                         p="2"
                         borderRadius="10px"
                         border="1px solid rgba(255, 255, 255, 0.05)"
+                        flexWrap="wrap"
                     >
                         <FilterButton
                             active={filterType === 'all'}
@@ -112,8 +162,10 @@ const Properties = () => {
                         <FilterButton
                             active={filterType === 'sale'}
                             onClick={() => setFilterType('sale')}
+//                             active={filter === 'sell'}
+//                             onClick={() => setFilter('sell')}
                         >
-                            For Sale
+                            For Sell
                         </FilterButton>
                         <FilterButton
                             active={filterType === 'rent'}
@@ -121,6 +173,14 @@ const Properties = () => {
                         >
                             For Rent
                         </FilterButton>
+                        {isLandlord && (
+                            <FilterButton
+                                active={filter === 'my-listings'}
+                                onClick={() => setFilter('my-listings')}
+                            >
+                                My Listings
+                            </FilterButton>
+                        )}
                     </HStack>
                 </Flex>
 

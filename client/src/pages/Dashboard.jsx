@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaUser,
   FaHome,
@@ -16,12 +16,23 @@ import {
 } from "react-icons/fa";
 import { authService, notificationService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import Sidebar from "../components/common/Sidebar";
 
 const Dashboard = () => {
   const { user, logout, loading, isLandlord, isTenant, isCompany, isAgent } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'overview';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [notifications, setNotifications] = useState([]);
+
+  // Sync activeTab with URL query parameter
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   React.useEffect(() => {
     if (activeTab === "notifications") {
@@ -39,11 +50,6 @@ const Dashboard = () => {
     }
   }, [activeTab]);
 
-  // Determine if user is a landlord
-  // Determine if user is a landlord - logic moved to useAuth hook
-
-  // Determine if user is a landlord
-  // Determine if user is a landlord - logic moved to useAuth hook
 
   const handleLogout = () => {
     authService.logout();
@@ -94,130 +100,8 @@ const Dashboard = () => {
         background: "var(--color-primary)",
       }}
     >
-      {/* Sidebar */}
-      <aside
-        style={{
-          width: "280px",
-          background: "var(--color-primary-light)",
-          borderRight: "1px solid rgba(255,255,255,0.05)",
-          padding: "2rem",
-        }}
-      >
-        <Link
-          to="/"
-          className="logo"
-          style={{ display: "block", marginBottom: "3rem" }}
-        >
-          Luxe<span className="text-accent">Estate</span>
-        </Link>
-
-        <nav
-          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
-        >
-          <SidebarItem
-            icon={<FaSearch />}
-            label="Search"
-            active={false} // Always navigates to /search
-            onClick={() => navigate("/search")}
-          />
-
-          <SidebarItem
-            icon={<FaUser />}
-            label="Overview"
-            active={activeTab === "overview"}
-            onClick={() => setActiveTab("overview")}
-          />
-
-          {(isLandlord() || isAgent()) && (
-            <>
-              <SidebarItem
-                icon={<FaHome />}
-                label="My Properties"
-                active={activeTab === "properties"}
-                onClick={() => navigate("/properties")}
-              />
-              <SidebarItem
-                icon={<FaPlus />}
-                label="Add Property"
-                active={activeTab === "add-property"}
-                onClick={() => navigate("/add-property")}
-              />
-              <SidebarItem
-                icon={<FaRocket />}
-                label="Boosted Listings"
-                active={activeTab === "boosted"}
-                onClick={() => setActiveTab("boosted")}
-              />
-            </>
-          )}
-
-          {isCompany() && (
-            <>
-              <SidebarItem
-                icon={<FaHome />}
-                label="My Properties"
-                active={activeTab === "properties"}
-                onClick={() => navigate("/properties")}
-              />
-              <SidebarItem
-                icon={<FaBuilding />}
-                label="Dev Requests"
-                active={activeTab === "dev-requests"}
-                onClick={() => navigate("/development-requests")}
-              />
-            </>
-          )}
-
-          {isTenant() && (
-            <>
-              <SidebarItem
-                icon={<FaHeart />}
-                label="Wishlist"
-                active={activeTab === "wishlist"}
-                onClick={() => navigate("/wishlist")}
-              />
-              <SidebarItem
-                icon={<FaHome />}
-                label="Browse Properties"
-                active={activeTab === "browse"}
-                onClick={() => navigate("/properties")}
-              />
-            </>
-          )}
-          <SidebarItem
-            icon={<FaComments />}
-            label="Messages"
-            active={activeTab === "messages"}
-            onClick={() => setActiveTab("messages")}
-          />
-          <SidebarItem
-            icon={<FaBell />}
-            label="Notifications"
-            active={activeTab === "notifications"}
-            onClick={() => setActiveTab("notifications")}
-          />
-          <SidebarItem
-            icon={<FaCog />}
-            label="Settings"
-            active={activeTab === "settings"}
-            onClick={() => setActiveTab("settings")}
-          />
-        </nav>
-
-        <div style={{ marginTop: "auto", paddingTop: "2rem" }}>
-          <button
-            onClick={handleLogout}
-            style={{
-              ...sidebarItemStyle,
-              color: "var(--color-error)",
-              width: "100%",
-              justifyContent: "flex-start",
-            }}
-          >
-            <FaSignOutAlt /> Logout
-          </button>
-        </div>
-      </aside>
+      {/* Reusable Sidebar Component */}
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Main Content */}
       <main style={{ flex: 1, padding: "3rem" }}>
@@ -243,60 +127,51 @@ const Dashboard = () => {
               {user?.role?.toUpperCase()}
             </span>
           </h1>
-          {(isLandlord() || isAgent() || isCompany()) && (
-            <button
-              className="btn btn-primary"
-              style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
-              onClick={() => navigate('/add-property')}
-            >
-              <FaPlus size={12} /> List New Property
-            </button>
-          )}
-          {isTenant() && (
-            <button
-              className="btn btn-primary"
-              style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
-              onClick={() => navigate('/properties')}
-            >
-              <FaHome size={12} /> Browse Properties
-            </button>
-          )}
+          <button
+            className="btn btn-primary"
+            style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
+            onClick={handleLogout}
+          >
+            <FaSignOutAlt size={12} /> Logout
+          </button>
         </header>
 
         {/* Dashboard Stats - Role Based */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "2rem",
-            marginBottom: "3rem",
-          }}
-        >
-          {isTenant() && (
-            <>
-              <StatCard number="12" label="Properties Viewed" />
-              <StatCard number="5" label="Saved Listings" />
-              <StatCard number="2" label="Scheduled Visits" />
-            </>
-          )}
+        {activeTab !== 'settings' && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "2rem",
+              marginBottom: "3rem",
+            }}
+          >
+            {isTenant() && (
+              <>
+                <StatCard number="12" label="Properties Viewed" />
+                <StatCard number="5" label="Saved Listings" />
+                <StatCard number="2" label="Scheduled Visits" />
+              </>
+            )}
 
-          {(isLandlord() || isAgent()) && (
-            <>
-              <StatCard number="3" label="Active Listings" />
-              <StatCard number="28" label="Total Views" />
-              <StatCard number="4" label="New Inquiries" />
-              <StatCard number="2" label="Boosted Listings" />
-            </>
-          )}
+            {(isLandlord() || isAgent()) && (
+              <>
+                <StatCard number="3" label="Active Listings" />
+                <StatCard number="28" label="Total Views" />
+                <StatCard number="4" label="New Inquiries" />
+                <StatCard number="2" label="Boosted Listings" />
+              </>
+            )}
 
-          {isCompany() && (
-            <>
-              <StatCard number="2" label="Active Projects" />
-              <StatCard number="15" label="Units Available" />
-              <StatCard number="8" label="Pending Bids" />
-            </>
-          )}
-        </div>
+            {isCompany() && (
+              <>
+                <StatCard number="2" label="Active Projects" />
+                <StatCard number="15" label="Units Available" />
+                <StatCard number="8" label="Pending Bids" />
+              </>
+            )}
+          </div>
+        )}
 
         {/* Recent Activity Section */}
         {/* Content Area */}
@@ -367,6 +242,7 @@ const Dashboard = () => {
                       text={notif.message}
                       time={new Date(notif.createdAt).toLocaleString()}
                       isHighlight={!notif.isRead}
+                      link={notif.relatedId && notif.type !== 'general' ? `/property/${notif.relatedId}` : null}
                     />
                   ))
                 ) : (
@@ -490,33 +366,7 @@ const Dashboard = () => {
   );
 };
 
-const SidebarItem = ({ icon, label, active, onClick }) => (
-  <button
-    onClick={onClick}
-    style={{
-      ...sidebarItemStyle,
-      background: active ? "rgba(212, 175, 55, 0.1)" : "transparent",
-      color: active ? "var(--color-accent)" : "var(--color-text-light)",
-      borderLeft: active
-        ? "3px solid var(--color-accent)"
-        : "3px solid transparent",
-    }}
-  >
-    {icon} {label}
-  </button>
-);
 
-const sidebarItemStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: "1rem",
-  padding: "1rem",
-  borderRadius: "0 8px 8px 0",
-  fontSize: "1rem",
-  cursor: "pointer",
-  transition: "all 0.2s",
-  textAlign: "left",
-};
 
 const StatCard = ({ number, label }) => (
   <div
@@ -541,22 +391,37 @@ const StatCard = ({ number, label }) => (
   </div>
 );
 
-const ActivityItem = ({ text, time, isHighlight }) => (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      padding: "1rem",
-      background: "rgba(0,0,0,0.2)",
-      borderRadius: "8px",
-      borderLeft: isHighlight ? "3px solid var(--color-accent)" : "none",
-    }}
-  >
-    <div style={{ color: "var(--color-text-main)" }}>{text}</div>
-    <div style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>
-      {time}
+const ActivityItem = ({ text, time, isHighlight, link }) => {
+  const content = (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        padding: "1rem",
+        background: "rgba(0,0,0,0.2)",
+        borderRadius: "8px",
+        borderLeft: isHighlight ? "3px solid var(--color-accent)" : "none",
+        cursor: link ? "pointer" : "default",
+        transition: "background 0.2s",
+      }}
+      className={link ? "hover:bg-black/40" : ""}
+    >
+      <div style={{ color: "var(--color-text-main)" }}>{text}</div>
+      <div style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>
+        {time}
+      </div>
     </div>
-  </div>
-);
+  );
+
+  if (link) {
+    return (
+      <Link to={link} style={{ display: 'block', textDecoration: 'none' }}>
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
+};
 
 export default Dashboard;

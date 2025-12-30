@@ -7,12 +7,14 @@ import SignupPage from "./pages/SignupPage.jsx";
 import Properties from "./pages/Properties.jsx";
 import PropertyListPage from "./pages/PropertyListPage.jsx";
 import PropertyDetailsPage from "./pages/PropertyDetailsPage.jsx";
+import EditPropertyPage from "./pages/EditPropertyPage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
 import DevelopmentRequests from "./pages/DevelopmentRequests.jsx";
 import AddPropertyPage from "./pages/AddPropertyPage.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
+import MessagesPage from "./pages/MessagesPage.jsx";
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
         <Route path="/properties" element={<Properties />} />
         <Route path="/properties-list" element={<PropertyListPage />} />
         <Route path="/properties/:id" element={<PropertyDetailsPage />} />
+        <Route path="/property/:id" element={<PropertyDetailsPage />} />
+        <Route path="/edit-property/:id" element={<EditPropertyPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
@@ -34,6 +38,7 @@ function App() {
           element={<DevelopmentRequests />}
         />
         <Route path="/add-property" element={<AddPropertyPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
         {/* Fallback route */}
         <Route path="*" element={<HomePage />} />
       </Routes>
@@ -42,4 +47,5 @@ function App() {
 }
 
 export default App;
+
 
