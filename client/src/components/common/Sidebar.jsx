@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     FaUser,
@@ -13,7 +13,7 @@ import {
     FaSearch,
     FaRocket,
 } from 'react-icons/fa';
-import { authService } from '../../services/api';
+import { authService, messageService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
 /**
@@ -28,6 +28,25 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
     const { user, isLandlord, isTenant, isCompany, isAgent } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    // Fetch unread message count
+    useEffect(() => {
+        const fetchUnreadCount = async () => {
+            if (user) {
+                try {
+                    const response = await messageService.getUnreadCount();
+                    setUnreadCount(response.data?.count || 0);
+                } catch (error) {
+                    console.error('Failed to fetch unread count:', error);
+                }
+            }
+        };
+        fetchUnreadCount();
+        // Refresh every 30 seconds
+        const interval = setInterval(fetchUnreadCount, 30000);
+        return () => clearInterval(interval);
+    }, [user]);
 
     const handleLogout = () => {
         authService.logout();
@@ -145,6 +164,7 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                     label="Messages"
                     active={isRouteActive('/messages') || activeTab === 'messages'}
                     onClick={() => navigate('/messages')}
+                    badge={unreadCount}
                 />
                 <SidebarItem
                     icon={<FaBell />}
@@ -171,25 +191,11 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                     }}
                 />
             </nav>
-
-            <div style={{ marginTop: 'auto', paddingTop: '2rem' }}>
-                <button
-                    onClick={handleLogout}
-                    style={{
-                        ...sidebarItemStyle,
-                        color: 'var(--color-error)',
-                        width: '100%',
-                        justifyContent: 'flex-start',
-                    }}
-                >
-                    <FaSignOutAlt /> Logout
-                </button>
-            </div>
         </aside>
     );
 };
 
-const SidebarItem = ({ icon, label, active, onClick }) => (
+const SidebarItem = ({ icon, label, active, onClick, badge }) => (
     <button
         onClick={onClick}
         style={{
@@ -199,9 +205,30 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
             borderLeft: active
                 ? '3px solid var(--color-accent)'
                 : '3px solid transparent',
+            position: 'relative',
         }}
     >
         {icon} {label}
+        {badge > 0 && (
+            <span
+                style={{
+                    marginLeft: 'auto',
+                    background: '#e53e3e',
+                    color: 'white',
+                    fontSize: '0.7rem',
+                    fontWeight: 'bold',
+                    borderRadius: '9999px',
+                    minWidth: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0 6px',
+                }}
+            >
+                {badge > 99 ? '99+' : badge}
+            </span>
+        )}
     </button>
 );
 

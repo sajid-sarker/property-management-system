@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Box, Flex, HStack, Icon, Text } from '@chakra-ui/react';
 import { FaBars, FaTimes, FaUser } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
+import { messageService } from '../../services/api';
 import Button from './Button';
 
 /**
@@ -14,12 +15,31 @@ const Navbar = ({ variant = 'auto' }) => {
     const location = useLocation();
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Fetch unread message count
+    useEffect(() => {
+        const fetchUnreadCount = async () => {
+            if (user) {
+                try {
+                    const response = await messageService.getUnreadCount();
+                    setUnreadCount(response.data?.count || 0);
+                } catch (error) {
+                    console.error('Failed to fetch unread count:', error);
+                }
+            }
+        };
+        fetchUnreadCount();
+        // Refresh every 30 seconds
+        const interval = setInterval(fetchUnreadCount, 30000);
+        return () => clearInterval(interval);
+    }, [user]);
 
     const isTransparent = variant === 'transparent' || (variant === 'auto' && location.pathname === '/');
     const showSolid = variant === 'solid' || scrolled || !isTransparent;
@@ -86,9 +106,30 @@ const Navbar = ({ variant = 'auto' }) => {
                 <HStack gap={3}>
                     {user ? (
                         <>
-                            <Link to="/dashboard">
+                            <Link to="/dashboard" style={{ position: 'relative' }}>
                                 <Button variant="ghost" size="sm" leftIcon={<FaUser />}>
                                     Dashboard
+                                    {unreadCount > 0 && (
+                                        <Box
+                                            as="span"
+                                            position="absolute"
+                                            top="-2px"
+                                            right="-2px"
+                                            bg="red.500"
+                                            color="white"
+                                            fontSize="0.65rem"
+                                            fontWeight="bold"
+                                            borderRadius="full"
+                                            minW="18px"
+                                            h="18px"
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            px={1}
+                                        >
+                                            {unreadCount > 99 ? '99+' : unreadCount}
+                                        </Box>
+                                    )}
                                 </Button>
                             </Link>
                             <Button variant="outline" size="sm" onClick={logout}>

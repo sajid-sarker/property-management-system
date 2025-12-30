@@ -127,24 +127,13 @@ const Dashboard = () => {
               {user?.role?.toUpperCase()}
             </span>
           </h1>
-          {(isLandlord() || isAgent() || isCompany()) && (
-            <button
-              className="btn btn-primary"
-              style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
-              onClick={() => navigate('/add-property')}
-            >
-              <FaPlus size={12} /> List New Property
-            </button>
-          )}
-          {isTenant() && (
-            <button
-              className="btn btn-primary"
-              style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
-              onClick={() => navigate('/properties')}
-            >
-              <FaHome size={12} /> Browse Properties
-            </button>
-          )}
+          <button
+            className="btn btn-primary"
+            style={{ gap: "0.5rem", display: 'flex', alignItems: 'center' }}
+            onClick={handleLogout}
+          >
+            <FaSignOutAlt size={12} /> Logout
+          </button>
         </header>
 
         {/* Dashboard Stats - Role Based */}
