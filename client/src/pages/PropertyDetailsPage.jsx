@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { propertyService, propertyBidService } from "../services/api";
+import { propertyService, propertyBidService, messageService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import {
   FaMapMarkerAlt,
@@ -16,6 +16,7 @@ import {
 import ReviewSection from "../components/properties/ReviewSection";
 import BidHistorySection from "../components/properties/BidHistorySection";
 import ErrorBoundary from "../components/common/ErrorBoundary";
+import Navbar from "../components/common/Navbar";
 
 const PropertyDetailsPage = () => {
   const { id } = useParams();
@@ -155,40 +156,7 @@ const PropertyDetailsPage = () => {
         color: "var(--color-text-main)",
       }}
     >
-      {/* Navbar (Simplified) */}
-      <nav className="navbar scrolled" style={{ position: "sticky" }}>
-        <div className="container nav-content">
-          <Link to="/" className="logo">
-            Luxe<span className="text-accent">Estate</span>
-          </Link>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {isOwner && (
-              <>
-                <Link
-                  to={`/edit-property/${id}`}
-                  className="btn btn-outline"
-                  style={{
-                    fontSize: "0.8rem",
-                    padding: "0.5rem 1rem",
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <FaEdit /> Edit Listing
-                </Link>
-              </>
-            )}
-            <Link
-              to="/properties"
-              className="btn btn-outline"
-              style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
-            >
-              Back to Listings
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar variant="solid" />
 
       <div
         className="container"
@@ -514,7 +482,7 @@ const PropertyDetailsPage = () => {
           />
         </div>
 
-        {/* Sidebar / Inquiry Form */}
+        {/* Sidebar / Contact Landlord */}
         <div>
           <div
             style={{
@@ -533,56 +501,99 @@ const PropertyDetailsPage = () => {
                 color: "white",
               }}
             >
-              Interested?
+              Contact Landlord
             </h3>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                marginBottom: "2rem",
-              }}
-            >
-              <img
-                src="https://randomuser.me/api/portraits/women/44.jpg"
-                alt="Agent"
+            
+            {/* Landlord Info */}
+            {property.landlord && (
+              <div
                 style={{
-                  width: "60px",
-                  height: "60px",
-                  borderRadius: "50%",
-                  border: "2px solid var(--color-accent)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "1rem",
+                  marginBottom: "2rem",
                 }}
-              />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
-                  Sarah Jenkins
-                </div>
-                <div
+              >
+                <img
+                  src={property.landlord.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(property.landlord.name || 'Owner')}&background=d4af37&color=0a0a0f`}
+                  alt="Landlord"
                   style={{
-                    color: "var(--color-text-light)",
-                    fontSize: "0.9rem",
+                    width: "60px",
+                    height: "60px",
+                    borderRadius: "50%",
+                    border: "2px solid var(--color-accent)",
                   }}
-                >
-                  Luxury Estate Agent
+                />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
+                    {property.landlord.name || "Property Owner"}
+                  </div>
+                  <div
+                    style={{
+                      color: "var(--color-text-light)",
+                      fontSize: "0.9rem",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {property.landlord.role || "Landlord"}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <form
-              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-            >
-              <input type="text" placeholder="Your Name" style={inputStyle} />
-              <input type="email" placeholder="Your Email" style={inputStyle} />
-              <input type="tel" placeholder="Your Phone" style={inputStyle} />
-              <textarea
-                placeholder="I'm interested in this property..."
-                rows="4"
-                style={inputStyle}
-              ></textarea>
-              <button className="btn btn-primary" style={{ width: "100%" }}>
-                Schedule Viewing
-              </button>
-            </form>
+            {/* Message Form */}
+            {user && property.landlord && property.landlord._id !== user._id && property.landlord._id !== user.id ? (
+              <form
+                style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const messageContent = e.target.message.value.trim();
+                  if (!messageContent) {
+                    alert("Please enter a message");
+                    return;
+                  }
+                  try {
+                    await messageService.send({
+                      receiverId: property.landlord._id,
+                      content: messageContent,
+                      propertyId: property._id || id,
+                    });
+                    alert("Message sent to landlord!");
+                    e.target.reset();
+                  } catch (error) {
+                    console.error("Failed to send message:", error);
+                    console.error("Error response:", error.response?.data);
+                    const errorMsg = error.response?.data?.message || error.message || "Unknown error";
+                    alert(`Failed to send message: ${errorMsg}`);
+                  }
+                }}
+              >
+                <textarea
+                  name="message"
+                  placeholder={`Hi, I'm interested in "${property.title || 'this property'}"...`}
+                  rows="4"
+                  style={inputStyle}
+                ></textarea>
+                <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>
+                  💬 Send Message
+                </button>
+              </form>
+            ) : !user ? (
+              <div style={{ textAlign: "center", color: "var(--color-text-light)" }}>
+                <p style={{ marginBottom: "1rem" }}>Please log in to contact the landlord</p>
+                <button
+                  className="btn btn-outline"
+                  style={{ width: "100%" }}
+                  onClick={() => navigate("/login")}
+                >
+                  Log In
+                </button>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", color: "var(--color-text-light)" }}>
+                <p>This is your property listing.</p>
+              </div>
+            )}
 
             <div
               style={{
@@ -613,26 +624,16 @@ const PropertyDetailsPage = () => {
                 👋 I'm Interested
               </button>
 
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  color: "var(--color-text-light)",
-                }}
-              >
-                <FaPhone className="text-accent" /> +1 (555) 123-4567
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  color: "var(--color-text-light)",
-                }}
-              >
-                <FaEnvelope className="text-accent" /> s.jenkins@luxeestate.com
-              </div>
+              {/* View All Messages with Landlord */}
+              {user && property.landlord && property.landlord._id !== user._id && property.landlord._id !== user.id && (
+                <button
+                  className="btn btn-outline"
+                  style={{ width: "100%" }}
+                  onClick={() => navigate(`/messages?user=${property.landlord._id}`)}
+                >
+                  📨 View Conversation
+                </button>
+              )}
             </div>
           </div>
         </div>

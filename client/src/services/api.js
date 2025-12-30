@@ -43,8 +43,10 @@ export const propertyService = {
   // Get single property by ID
   getById: (id) => api.get(`/properties/${id}`),
 
-  // Get single property by ID
+  // Delete property by ID 
   deleteProperty: (id) => api.delete(`/properties/${id}`),
+  
+  // Get single property by ID
   searchProperties: (params) => {
     const queryString = new URLSearchParams(params).toString();
     return api.get(`/properties/search?${queryString}`);
@@ -271,6 +273,21 @@ export const boostService = {
 
   // Cancel a boost
   cancelBoost: (boostId) => api.delete(`/boosts/${boostId}`),
+};
+
+// ============ MESSAGE SERVICE ============
+export const messageService = {
+  // Send a new message
+  send: (data) => api.post("/messages", data),
+
+  // Get unread message count
+  getUnreadCount: () => api.get("/messages/unread-count"),
+
+  // Get list of conversations
+  getConversations: () => api.get("/messages/conversations"),
+
+  // Get messages with a specific user
+  getMessages: (userId) => api.get(`/messages/${userId}`),
 };
 
 export default api;

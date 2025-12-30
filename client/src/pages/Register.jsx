@@ -106,7 +106,6 @@ const Register = () => {
                         >
                             <option value="tenant">Tenant (Looking to rent/buy)</option>
                             <option value="landlord">Landlord (Listing properties)</option>
-                            <option value="agent">Agent (Managing properties)</option>
                             <option value="company">Real Estate Company (Development)</option>
                         </select>
                     </div>

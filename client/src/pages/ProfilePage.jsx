@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/api";
+import Sidebar from "../components/common/Sidebar";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const ProfilePage = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const response = await authService.getCurrentUser();
@@ -46,50 +47,48 @@ const ProfilePage = () => {
   return (
     <div
       style={{
+        display: "flex",
         minHeight: "100vh",
         background: "var(--color-primary)",
-        paddingTop: "80px",
-        color: "white",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
       }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <Sidebar />
+      <div
         style={{
-          width: "100%",
-          maxWidth: "800px",
-          background: "var(--color-primary-light)",
-          border: "1px solid rgba(255,255,255,0.05)",
-          borderRadius: "12px",
+          flex: 1,
           padding: "3rem",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          color: "white",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
         }}
       >
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "2rem",
+            width: "100%",
+            maxWidth: "800px",
+            background: "var(--color-primary-light)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            borderRadius: "12px",
+            padding: "3rem",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
           }}
         >
-          <h1 style={{ fontSize: "2.5rem", fontFamily: "var(--font-heading)" }}>
-            Edit Profile
-          </h1>
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="btn btn-outline"
+          <div
+            style={{
+              marginBottom: "2rem",
+            }}
           >
-            Back to Dashboard
-          </button>
-        </div>
+            <h1 style={{ fontSize: "2.5rem", fontFamily: "var(--font-heading)" }}>
+              Edit Profile
+            </h1>
+          </div>
 
-        <div
-          style={{ display: "flex", gap: "3rem", flexDirection: "row-reverse" }}
-        >
+          <div
+            style={{ display: "flex", gap: "3rem", flexDirection: "row-reverse" }}
+          >
           {/* Profile Picture Column */}
           <div style={{ flex: 1, textAlign: "center" }}>
             <div
@@ -175,6 +174,7 @@ const ProfilePage = () => {
           </form>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };
