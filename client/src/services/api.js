@@ -35,7 +35,10 @@ export const notificationService = {
 // ============ PROPERTY SERVICE ============
 export const propertyService = {
   // Get all properties from database
-  getAll: () => api.get("/properties"),
+  getAll: (params) => {
+    const queryString = params ? new URLSearchParams(params).toString() : "";
+    return api.get(`/properties?${queryString}`);
+  },
 
   // Get single property by ID
   getById: (id) => api.get(`/properties/${id}`),

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Grid, Flex, Text, Heading, HStack } from '@chakra-ui/react';
+import { Box, Grid, Flex, Text, Heading, HStack, Input } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { propertyService } from '../services/api';
 
@@ -17,31 +17,50 @@ import PropertyCard from '../components/properties/PropertyCard';
 const Properties = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all');
+    const [filterType, setFilterType] = useState('all'); // Renamed from filter to filterType to avoid confusion
+
+    // New Filter State
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+    const [location, setLocation] = useState('');
+    const [minRating, setMinRating] = useState('');
+
+    const fetchProperties = async () => {
+        try {
+            setLoading(true);
+            const params = {};
+            if (minPrice) params.minPrice = minPrice;
+            if (maxPrice) params.maxPrice = maxPrice;
+            if (location) params.location = location;
+            if (minRating) params.minRating = minRating;
+
+            const response = await propertyService.getAll(params);
+
+            // Handle both { success: true, data: [...] } and direct array responses
+            const data = response.data?.data || response.data || [];
+            setProperties(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error('Failed to fetch properties', error);
+            setProperties([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchProperties = async () => {
-            try {
-                const response = await propertyService.getAll();
-                // Handle both { success: true, data: [...] } and direct array responses
-                const data = response.data?.data || response.data || [];
-                setProperties(Array.isArray(data) ? data : []);
-            } catch (error) {
-                console.error('Failed to fetch properties', error);
-                setProperties([]);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchProperties();
-    }, []);
+    }, []); // Initial load
+
+    const handleApplyFilters = () => {
+        fetchProperties();
+    };
 
     // Filter properties based on selection
+    // Client-side filtering for Type (Sale/Rent) as that's often a toggle
     const filteredProperties = properties.filter((p) => {
-        if (filter === 'all') return true;
         const propType = (p.type || '').toLowerCase();
-        if (filter === 'sale') return propType.includes('sale') || p.isForSale;
-        if (filter === 'rent') return propType.includes('rent') || p.isForRent;
+        if (filterType === 'sale') return propType.includes('sale') || p.isForSale;
+        if (filterType === 'rent') return propType.includes('rent') || p.isForRent;
         return true;
     });
 
@@ -74,7 +93,7 @@ const Properties = () => {
                         </Text>
                     </Box>
 
-                    {/* Filter Buttons */}
+                    {/* Filter Buttons (Type) */}
                     <HStack
                         gap="1"
                         bg="#14141f"
@@ -83,25 +102,107 @@ const Properties = () => {
                         border="1px solid rgba(255, 255, 255, 0.05)"
                     >
                         <FilterButton
-                            active={filter === 'all'}
-                            onClick={() => setFilter('all')}
+                            active={filterType === 'all'}
+                            onClick={() => setFilterType('all')}
                         >
                             All
                         </FilterButton>
                         <FilterButton
-                            active={filter === 'sale'}
-                            onClick={() => setFilter('sale')}
+                            active={filterType === 'sale'}
+                            onClick={() => setFilterType('sale')}
                         >
                             For Sale
                         </FilterButton>
                         <FilterButton
-                            active={filter === 'rent'}
-                            onClick={() => setFilter('rent')}
+                            active={filterType === 'rent'}
+                            onClick={() => setFilterType('rent')}
                         >
                             For Rent
                         </FilterButton>
                     </HStack>
                 </Flex>
+
+                {/* Advanced Filters Section */}
+                <Box mb="10" bg="#14141f" p="6" borderRadius="xl" border="1px solid rgba(255, 255, 255, 0.05)">
+                    <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)', lg: 'repeat(5, 1fr)' }} gap="4" alignItems="end">
+                        <Box>
+                            <Text mb="2" fontSize="sm" color="#a0a0a0">Location</Text>
+                            <Input
+                                placeholder="City, State, or Street"
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
+                                bg="rgba(255, 255, 255, 0.05)"
+                                border="none"
+                                color="white"
+                                _focus={{ boxShadow: '0 0 0 1px #d4af37' }}
+                            />
+                        </Box>
+                        <Box>
+                            <Text mb="2" fontSize="sm" color="#a0a0a0">Min Price</Text>
+                            <Input
+                                type="number"
+                                placeholder="Min Price"
+                                value={minPrice}
+                                onChange={(e) => setMinPrice(e.target.value)}
+                                bg="rgba(255, 255, 255, 0.05)"
+                                border="none"
+                                color="white"
+                                _focus={{ boxShadow: '0 0 0 1px #d4af37' }}
+                            />
+                        </Box>
+                        <Box>
+                            <Text mb="2" fontSize="sm" color="#a0a0a0">Max Price</Text>
+                            <Input
+                                type="number"
+                                placeholder="Max Price"
+                                value={maxPrice}
+                                onChange={(e) => setMaxPrice(e.target.value)}
+                                bg="rgba(255, 255, 255, 0.05)"
+                                border="none"
+                                color="white"
+                                _focus={{ boxShadow: '0 0 0 1px #d4af37' }}
+                            />
+                        </Box>
+                        <Box>
+                            <Text mb="2" fontSize="sm" color="#a0a0a0">Rating</Text>
+                            <Box
+                                as="select"
+                                placeholder="Any Rating"
+                                value={minRating}
+                                onChange={(e) => setMinRating(e.target.value)}
+                                bg="rgba(255, 255, 255, 0.05)"
+                                border="none"
+                                color="white"
+                                p="2"
+                                borderRadius="md"
+                                width="100%"
+                                sx={{
+                                    '> option': {
+                                        background: '#14141f',
+                                        color: 'white'
+                                    }
+                                }}
+                                _focus={{ boxShadow: '0 0 0 1px #d4af37', outline: "none" }}
+                            >
+                                <option value="">Any Rating</option>
+                                <option value="1">1+ Stars</option>
+                                <option value="2">2+ Stars</option>
+                                <option value="3">3+ Stars</option>
+                                <option value="4">4+ Stars</option>
+                                <option value="5">5 Stars</option>
+                            </Box>
+                        </Box>
+                        <Box>
+                            <Button
+                                variant="primary"
+                                onClick={handleApplyFilters}
+                                width="100%"
+                            >
+                                Apply Filters
+                            </Button>
+                        </Box>
+                    </Grid>
+                </Box>
 
                 {/* Property Grid */}
                 {loading ? (
