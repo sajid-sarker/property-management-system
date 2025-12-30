@@ -31,6 +31,11 @@ export const getProperties = async (req, res) => {
       filter.averageRating = { $gte: Number(minRating) };
     }
 
+    // Status Filter (Exact match)
+    if (req.query.status && req.query.status !== 'all') {
+      filter.status = req.query.status;
+    }
+
     // Sort by priority descending (boosted properties first), then by createdAt
     const properties = await Property.find(filter).sort({ priority: -1, createdAt: -1 });
     res.status(200).json({ success: true, data: properties });

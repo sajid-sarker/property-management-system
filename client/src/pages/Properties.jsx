@@ -24,6 +24,7 @@ const Properties = () => {
     const [maxPrice, setMaxPrice] = useState('');
     const [location, setLocation] = useState('');
     const [minRating, setMinRating] = useState('');
+    const [status, setStatus] = useState('available'); // Default to 'available' for buyers
 
     const fetchProperties = async () => {
         try {
@@ -33,6 +34,7 @@ const Properties = () => {
             if (maxPrice) params.maxPrice = maxPrice;
             if (location) params.location = location;
             if (minRating) params.minRating = minRating;
+            if (status) params.status = status;
 
             const response = await propertyService.getAll(params);
 
@@ -190,6 +192,33 @@ const Properties = () => {
                                 <option value="3">3+ Stars</option>
                                 <option value="4">4+ Stars</option>
                                 <option value="5">5 Stars</option>
+                            </Box>
+                        </Box>
+                        <Box>
+                            <Text mb="2" fontSize="sm" color="#a0a0a0">Status</Text>
+                            <Box
+                                as="select"
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value)}
+                                bg="rgba(255, 255, 255, 0.05)"
+                                border="none"
+                                color="white"
+                                p="2"
+                                borderRadius="md"
+                                width="100%"
+                                sx={{
+                                    '> option': {
+                                        background: '#14141f',
+                                        color: 'white'
+                                    }
+                                }}
+                                _focus={{ boxShadow: '0 0 0 1px #d4af37', outline: "none" }}
+                            >
+                                <option value="available">Available</option>
+                                <option value="sold">Sold</option>
+                                <option value="rented">Rented</option>
+                                <option value="pending">Pending</option>
+                                <option value="all">All Statuses</option>
                             </Box>
                         </Box>
                         <Box>
