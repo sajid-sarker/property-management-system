@@ -14,6 +14,7 @@ import WishlistPage from "./pages/WishlistPage.jsx";
 import DevelopmentRequests from "./pages/DevelopmentRequests.jsx";
 import AddPropertyPage from "./pages/AddPropertyPage.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
+import MessagesPage from "./pages/MessagesPage.jsx";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
           element={<DevelopmentRequests />}
         />
         <Route path="/add-property" element={<AddPropertyPage />} />
+        <Route path="/messages" element={<MessagesPage />} />
         {/* Fallback route */}
         <Route path="*" element={<HomePage />} />
       </Routes>
