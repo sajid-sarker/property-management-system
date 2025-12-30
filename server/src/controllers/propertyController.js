@@ -6,8 +6,39 @@ import Notification from "../models/Notification.js";
 
 export const getProperties = async (req, res) => {
   try {
+    const { minPrice, maxPrice, location, minRating } = req.query;
+
+    const filter = {};
+
+    // Price Filter
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // Location Filter (Search in city, state, or street)
+    if (location) {
+      const locationRegex = { $regex: location, $options: "i" };
+      filter.$or = [
+        { "address.city": locationRegex },
+        { "address.state": locationRegex },
+        { "address.street": locationRegex },
+      ];
+    }
+
+    // Rating Filter
+    if (minRating) {
+      filter.averageRating = { $gte: Number(minRating) };
+    }
+
+    // Status Filter (Exact match)
+    if (req.query.status && req.query.status !== 'all') {
+      filter.status = req.query.status;
+    }
+
     // Sort by priority descending (boosted properties first), then by createdAt
-    const properties = await Property.find({}).sort({ priority: -1, createdAt: -1 });
+    const properties = await Property.find(filter).sort({ priority: -1, createdAt: -1 });
     res.status(200).json({ success: true, data: properties });
   } catch (error) {
     console.log("Error fetching properties:", error.message);
