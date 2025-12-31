@@ -28,6 +28,7 @@ const Properties = () => {
     const [location, setLocation] = useState('');
     const [minRating, setMinRating] = useState('');
     const [status, setStatus] = useState('available'); // Default to 'available' for buyers
+    const [listingType, setListingType] = useState(''); // Sale or Rent filter
 
     const fetchProperties = async () => {
         try {
@@ -38,6 +39,7 @@ const Properties = () => {
             if (location) params.location = location;
             if (minRating) params.minRating = minRating;
             if (status) params.status = status;
+            if (listingType) params.listingType = listingType;
 
             const response = await propertyService.getAll(params);
 
@@ -175,8 +177,8 @@ const Properties = () => {
                         </FilterButton>
                         {isLandlord && (
                             <FilterButton
-                                active={filter === 'my-listings'}
-                                onClick={() => setFilter('my-listings')}
+                                active={filterType === 'my-listings'}
+                                onClick={() => setFilterType('my-listings')}
                             >
                                 My Listings
                             </FilterButton>
@@ -186,7 +188,35 @@ const Properties = () => {
 
                 {/* Advanced Filters Section */}
                 <Box mb="10" bg="#14141f" p="6" borderRadius="xl" border="1px solid rgba(255, 255, 255, 0.05)">
-                    <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)', lg: 'repeat(5, 1fr)' }} gap="4" alignItems="end">
+                    <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)', lg: 'repeat(6, 1fr)' }} gap="4" alignItems="end">
+                        <Box>
+                            <Text mb="2" fontSize="sm" color="#a0a0a0">Type</Text>
+                            <Box
+                                as="select"
+                                value={listingType}
+                                onChange={(e) => setListingType(e.target.value)}
+                                bg="#0a0a0f"
+                                border="1px solid rgba(255, 255, 255, 0.1)"
+                                color="white"
+                                p="2"
+                                pl="4"
+                                borderRadius="md"
+                                width="100%"
+                                cursor="pointer"
+                                sx={{
+                                    '> option': {
+                                        background: '#0a0a0f',
+                                        color: 'white',
+                                        padding: '10px'
+                                    }
+                                }}
+                                _focus={{ boxShadow: '0 0 0 1px #d4af37', outline: "none" }}
+                            >
+                                <option value="" style={{ background: '#0a0a0f', color: 'white' }}>All Types</option>
+                                <option value="sell" style={{ background: '#0a0a0f', color: 'white' }}>For Sale</option>
+                                <option value="rent" style={{ background: '#0a0a0f', color: 'white' }}>For Rent</option>
+                            </Box>
+                        </Box>
                         <Box>
                             <Text mb="2" fontSize="sm" color="#a0a0a0">Location</Text>
                             <Input
@@ -196,6 +226,7 @@ const Properties = () => {
                                 bg="rgba(255, 255, 255, 0.05)"
                                 border="none"
                                 color="white"
+                                pl="4"
                                 _focus={{ boxShadow: '0 0 0 1px #d4af37' }}
                             />
                         </Box>
@@ -209,6 +240,7 @@ const Properties = () => {
                                 bg="rgba(255, 255, 255, 0.05)"
                                 border="none"
                                 color="white"
+                                pl="4"
                                 _focus={{ boxShadow: '0 0 0 1px #d4af37' }}
                             />
                         </Box>
@@ -222,6 +254,7 @@ const Properties = () => {
                                 bg="rgba(255, 255, 255, 0.05)"
                                 border="none"
                                 color="white"
+                                pl="4"
                                 _focus={{ boxShadow: '0 0 0 1px #d4af37' }}
                             />
                         </Box>
@@ -232,26 +265,29 @@ const Properties = () => {
                                 placeholder="Any Rating"
                                 value={minRating}
                                 onChange={(e) => setMinRating(e.target.value)}
-                                bg="rgba(255, 255, 255, 0.05)"
-                                border="none"
+                                bg="#0a0a0f"
+                                border="1px solid rgba(255, 255, 255, 0.1)"
                                 color="white"
                                 p="2"
+                                pl="4"
                                 borderRadius="md"
                                 width="100%"
+                                cursor="pointer"
                                 sx={{
                                     '> option': {
-                                        background: '#14141f',
-                                        color: 'white'
+                                        background: '#0a0a0f',
+                                        color: 'white',
+                                        padding: '10px'
                                     }
                                 }}
                                 _focus={{ boxShadow: '0 0 0 1px #d4af37', outline: "none" }}
                             >
-                                <option value="">Any Rating</option>
-                                <option value="1">1+ Stars</option>
-                                <option value="2">2+ Stars</option>
-                                <option value="3">3+ Stars</option>
-                                <option value="4">4+ Stars</option>
-                                <option value="5">5 Stars</option>
+                                <option value="" style={{ background: '#0a0a0f', color: 'white' }}>Any Rating</option>
+                                <option value="1" style={{ background: '#0a0a0f', color: 'white' }}>1+ Stars</option>
+                                <option value="2" style={{ background: '#0a0a0f', color: 'white' }}>2+ Stars</option>
+                                <option value="3" style={{ background: '#0a0a0f', color: 'white' }}>3+ Stars</option>
+                                <option value="4" style={{ background: '#0a0a0f', color: 'white' }}>4+ Stars</option>
+                                <option value="5" style={{ background: '#0a0a0f', color: 'white' }}>5 Stars</option>
                             </Box>
                         </Box>
                         <Box>
@@ -260,25 +296,28 @@ const Properties = () => {
                                 as="select"
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value)}
-                                bg="rgba(255, 255, 255, 0.05)"
-                                border="none"
+                                bg="#0a0a0f"
+                                border="1px solid rgba(255, 255, 255, 0.1)"
                                 color="white"
                                 p="2"
+                                pl="4"
                                 borderRadius="md"
                                 width="100%"
+                                cursor="pointer"
                                 sx={{
                                     '> option': {
-                                        background: '#14141f',
-                                        color: 'white'
+                                        background: '#0a0a0f',
+                                        color: 'white',
+                                        padding: '10px'
                                     }
                                 }}
                                 _focus={{ boxShadow: '0 0 0 1px #d4af37', outline: "none" }}
                             >
-                                <option value="available">Available</option>
-                                <option value="sold">Sold</option>
-                                <option value="rented">Rented</option>
-                                <option value="pending">Pending</option>
-                                <option value="all">All Statuses</option>
+                                <option value="available" style={{ background: '#0a0a0f', color: 'white' }}>Available</option>
+                                <option value="sold" style={{ background: '#0a0a0f', color: 'white' }}>Sold</option>
+                                <option value="rented" style={{ background: '#0a0a0f', color: 'white' }}>Rented</option>
+                                <option value="pending" style={{ background: '#0a0a0f', color: 'white' }}>Pending</option>
+                                <option value="all" style={{ background: '#0a0a0f', color: 'white' }}>All Statuses</option>
                             </Box>
                         </Box>
                         <Box>

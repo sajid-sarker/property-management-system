@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { propertyService, propertyBidService, messageService } from "../services/api";
+import { propertyService, propertyBidService, messageService, wishlistService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import {
   FaMapMarkerAlt,
@@ -12,6 +12,8 @@ import {
   FaEnvelope,
   FaEdit,
   FaTrash,
+  FaHeart,
+  FaRegHeart,
 } from "react-icons/fa";
 import ReviewSection from "../components/properties/ReviewSection";
 import BidHistorySection from "../components/properties/BidHistorySection";
@@ -27,6 +29,8 @@ const PropertyDetailsPage = () => {
   const [bidAmount, setBidAmount] = useState('');
   const [bidMessage, setBidMessage] = useState('');
   const [submittingBid, setSubmittingBid] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -62,6 +66,46 @@ const PropertyDetailsPage = () => {
     };
     fetchProperty();
   }, [id]);
+
+  // Check if property is in user's wishlist
+  useEffect(() => {
+    const checkWishlistStatus = async () => {
+      if (user && id) {
+        try {
+          const response = await wishlistService.check(id);
+          setInWishlist(response.data?.inWishlist || false);
+        } catch (error) {
+          console.error("Failed to check wishlist status:", error);
+        }
+      }
+    };
+    checkWishlistStatus();
+  }, [user, id]);
+
+  // Toggle wishlist
+  const handleWishlistToggle = async () => {
+    if (!user) {
+      alert("Please log in to add to wishlist");
+      navigate("/login");
+      return;
+    }
+
+    setWishlistLoading(true);
+    try {
+      if (inWishlist) {
+        await wishlistService.remove(id);
+        setInWishlist(false);
+      } else {
+        await wishlistService.add(id);
+        setInWishlist(true);
+      }
+    } catch (error) {
+      console.error("Failed to update wishlist:", error);
+      alert(error.response?.data?.message || "Failed to update wishlist");
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
 
   if (loading)
     return (
@@ -622,6 +666,25 @@ const PropertyDetailsPage = () => {
                 }}
               >
                 👋 I'm Interested
+              </button>
+
+              {/* Add to Wishlist Button */}
+              <button
+                className="btn btn-outline"
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                  color: inWishlist ? "#e53e3e" : "var(--color-text-main)",
+                  borderColor: inWishlist ? "#e53e3e" : "rgba(255,255,255,0.2)",
+                }}
+                onClick={handleWishlistToggle}
+                disabled={wishlistLoading}
+              >
+                {inWishlist ? <FaHeart /> : <FaRegHeart />}
+                {wishlistLoading ? "Updating..." : inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
               </button>
 
               {/* View All Messages with Landlord */}
