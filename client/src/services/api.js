@@ -200,57 +200,22 @@ export const projectService = {
 };
 
 // ============ WISHLIST SERVICE ============
-// Using localStorage for wishlist as it's user-specific client-side storage
 export const wishlistService = {
-  getAll: () => {
-    const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-    return Promise.resolve({ data: wishlist });
-  },
+  // Get user's wishlist from backend
+  getAll: () => api.get("/wishlist"),
 
-  add: (property) => {
-    const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-    // Avoid duplicates
-    const exists = wishlist.find(
-      (p) =>
-        p._id === property._id ||
-        p.propertyId === property.propertyId ||
-        p.id === property.id
-    );
-    if (!exists) {
-      wishlist.push(property);
-      localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    }
-    return Promise.resolve({ data: property });
-  },
+  // Add property to wishlist
+  add: (propertyId) => api.post("/wishlist/add", { propertyId }),
 
-  remove: (propertyId) => {
-    let wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-    wishlist = wishlist.filter(
-      (p) =>
-        p._id !== propertyId &&
-        p.propertyId !== propertyId &&
-        p.id !== propertyId
-    );
-    localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    return Promise.resolve({ data: { success: true } });
-  },
+  // Remove property from wishlist
+  remove: (propertyId) => api.delete(`/wishlist/${propertyId}`),
 
   // Update notes for a wishlist item
-  updateNotes: (propertyId, notes) => {
-    let wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-    wishlist = wishlist.map((p) => {
-      if (
-        p._id === propertyId ||
-        p.propertyId === propertyId ||
-        p.id === propertyId
-      ) {
-        return { ...p, notes };
-      }
-      return p;
-    });
-    localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    return Promise.resolve({ data: { success: true } });
-  },
+  updateNotes: (propertyId, notes) =>
+    api.put(`/wishlist/${propertyId}/notes`, { notes }),
+
+  // Check if property is in wishlist
+  check: (propertyId) => api.get(`/wishlist/check/${propertyId}`),
 };
 
 // ============ BOOST SERVICE ============

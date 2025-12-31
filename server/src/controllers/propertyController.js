@@ -37,6 +37,11 @@ export const getProperties = async (req, res) => {
       filter.status = req.query.status;
     }
 
+    // Listing Type Filter (sell or rent)
+    if (req.query.listingType && ['sell', 'rent'].includes(req.query.listingType)) {
+      filter.listingType = req.query.listingType;
+    }
+
     // Sort by priority descending (boosted properties first), then by createdAt
     const properties = await Property.find(filter).sort({ priority: -1, createdAt: -1 });
     res.status(200).json({ success: true, data: properties });
