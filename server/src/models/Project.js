@@ -6,31 +6,35 @@ const projectSchema = new mongoose.Schema(
     projectId: {
       type: String,
       unique: true,
-      required: true,
     },
     images: {
-      images: [String],
-      required: true,
-    },
-    address: {
-      type: {
-        // Define the structure *inside* a 'type' property
-        street: { type: String, required: true },
-        city: { type: String, required: true },
-        state: { type: String, required: true },
-        country: { type: String, required: true },
-      },
-      required: true, // This makes the entire 'address' field required
+      type: [String],
+      default: [],
     },
     title: { type: String, required: true },
     description: { type: String, required: true },
     budget: { type: Number, required: true },
-
-    // Reference to owner who posted
+    // Location string for simpler display
+    location: { type: String },
+    // Deadline for bidding
+    deadline: { type: Date },
+    // Status of the project
+    status: {
+      type: String,
+      enum: ["Open", "Closed", "InProgress", "Completed"],
+      default: "Open",
+    },
+    // Optional address object
+    address: {
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      country: { type: String },
+    },
+    // Reference to owner who posted (optional for now)
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     // List of bids from companies
     bids: [

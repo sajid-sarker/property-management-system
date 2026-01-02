@@ -5,7 +5,7 @@ import path from "path";
 // Route imports
 import propertyRoutes from "./routes/propertyRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-// import projectRoutes from "./routes/projectRoutes.js";
+import projectRoutes from "./routes/projectRoutes.js";
 import boostRoutes from "./routes/boostRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
@@ -38,7 +38,7 @@ app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 // API Routes
 app.use("/api/users", authRoutes);
 app.use("/api/properties", propertyRoutes);
-// app.use("/api/projects", projectRoutes);
+app.use("/api/projects", projectRoutes);
 app.use("/api/boosts", boostRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 // app.use("/api", bidRoutes);
