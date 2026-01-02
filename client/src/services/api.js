@@ -48,7 +48,7 @@ export const propertyService = {
 
   // Delete property by ID 
   deleteProperty: (id) => api.delete(`/properties/${id}`),
-  
+
   // Get single property by ID
   searchProperties: (params) => {
     const queryString = new URLSearchParams(params).toString();
@@ -187,9 +187,13 @@ export const authService = {
 };
 
 // ============ PROJECT SERVICE (Development Requests) ============
+// Features 3 & 4 of Requirement 1: Bid management for real estate companies
 export const projectService = {
   // Get all development projects
   getAll: () => api.get("/projects"),
+
+  // Get single project by ID
+  getById: (id) => api.get(`/projects/${id}`),
 
   // Create new project
   create: (data) => api.post("/projects", data),
@@ -197,6 +201,20 @@ export const projectService = {
   // Place bid on a project (for companies)
   placeBid: (projectId, bidData) =>
     api.post(`/projects/${projectId}/bid`, bidData),
+
+  // Feature 3: Update/modify a bid before deadline
+  updateBid: (projectId, bidId, bidData) =>
+    api.put(`/projects/${projectId}/bid/${bidId}`, bidData),
+
+  // Feature 3: Withdraw/cancel a bid before deadline
+  withdrawBid: (projectId, bidId) =>
+    api.delete(`/projects/${projectId}/bid/${bidId}`),
+
+  // Feature 4: Get all bids for a project (view other bids)
+  getProjectBids: (projectId) => api.get(`/projects/${projectId}/bids`),
+
+  // Get company's own bids
+  getMyBids: () => api.get("/projects/my-bids"),
 };
 
 // ============ WISHLIST SERVICE ============
@@ -259,3 +277,5 @@ export const messageService = {
 };
 
 export default api;
+
+
