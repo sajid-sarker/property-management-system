@@ -4,6 +4,7 @@ import { wishlistService } from '../services/api';
 import { FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaTrash } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/common/Sidebar';
+import NotesEditor from '../components/NotesEditor';
 
 const WishlistPage = () => {
     const [wishlist, setWishlist] = useState([]);
@@ -70,30 +71,16 @@ const WishlistPage = () => {
                                 const prop = item.property || item;
                                 const propertyId = prop._id || prop;
                                 const notes = item.notes || '';
-                                
+
                                 return (
                                     <div key={propertyId} style={{ position: 'relative' }}>
                                         <PropertyCard data={prop} />
-                                        {/* Personal Notes Feature */}
-                                        <div style={{ marginTop: '0.5rem' }}>
-                                            <textarea
-                                                placeholder="Add personal notes..."
-                                                defaultValue={notes}
-                                                onBlur={(e) => handleNotesUpdate(propertyId, e.target.value)}
-                                                style={{
-                                                    width: '100%',
-                                                    background: 'rgba(0,0,0,0.2)',
-                                                    border: '1px solid rgba(255,255,255,0.1)',
-                                                    borderRadius: '4px',
-                                                    color: 'var(--color-text-light)',
-                                                    padding: '0.5rem',
-                                                    fontSize: '0.85rem',
-                                                    fontFamily: 'var(--font-body)',
-                                                    resize: 'vertical',
-                                                    minHeight: '60px'
-                                                }}
-                                            />
-                                        </div>
+                                        {/* Enhanced Personal Notes Feature */}
+                                        <NotesEditor
+                                            propertyId={propertyId}
+                                            initialNotes={notes}
+                                            onUpdate={handleNotesUpdate}
+                                        />
                                         <button
                                             onClick={() => removeFromWishlist(propertyId)}
                                             style={{
@@ -127,7 +114,7 @@ const PropertyCard = ({ data }) => {
 
     const imageUrl = data.image || (data.images && data.images[0]) || 'https://via.placeholder.com/400x250?text=No+Image';
     const title = data.title || 'Untitled Property';
-    const price = data.listingType === 'sell' 
+    const price = data.listingType === 'sell'
         ? `$${(data.currentPrice || data.startingPrice || data.price)?.toLocaleString() || 'N/A'}`
         : `$${data.price?.toLocaleString() || 'N/A'}/mo`;
     const location = data.location || (data.address && `${data.address.city || ''}`) || 'Location N/A';

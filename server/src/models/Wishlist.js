@@ -23,6 +23,10 @@ const wishlistSchema = new mongoose.Schema(
           type: Number,
           default: null,
         },
+        notesLastUpdated: {
+          type: Date,
+          default: null,
+        },
         addedAt: {
           type: Date,
           default: Date.now,
