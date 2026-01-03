@@ -184,3 +184,104 @@ export const getAllUsers = async (req, res) => {
         });
     }
 };
+
+// @desc    Get public user profile
+// @route   GET /api/users/profile/:userId
+export const getPublicProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId).select(
+            "name email role image description phoneNumber createdAt landlordInfo companyInfo"
+        );
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+        res.status(200).json({
+            success: true,
+            data: user,
+        });
+    } catch (error) {
+        console.error("Get profile error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile/:userId
+// Limits for MongoDB free tier
+const MAX_IMAGE_SIZE_KB = 500;
+const MAX_BIO_CHARACTERS = 500;
+
+export const updateUserProfile = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Ensure user can only update their own profile
+        if (req.user.id !== userId) {
+            return res.status(403).json({
+                success: false,
+                message: "Not authorized to update this profile",
+            });
+        }
+
+        const { name, image, description, phoneNumber } = req.body;
+        
+        // Validate bio length
+        if (description && description.length > MAX_BIO_CHARACTERS) {
+            return res.status(400).json({
+                success: false,
+                message: `Bio must be ${MAX_BIO_CHARACTERS} characters or less`,
+            });
+        }
+
+        // Validate image size (base64 string)
+        if (image && image.startsWith('data:image')) {
+            // Base64 is ~33% larger than original, so calculate approximate original size
+            const base64Length = image.length - (image.indexOf(',') + 1);
+            const approximateSizeKB = (base64Length * 0.75) / 1024;
+            
+            if (approximateSizeKB > MAX_IMAGE_SIZE_KB) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Image size must be less than ${MAX_IMAGE_SIZE_KB}KB`,
+                });
+            }
+        }
+        
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (image) updateData.image = image;
+        if (description !== undefined) updateData.description = description;
+        if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true }
+        ).select("-password");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            data: user,
+        });
+    } catch (error) {
+        console.error("Update profile error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
+};

@@ -14,9 +14,10 @@ import {
   FaRocket,
   FaListAlt,
 } from "react-icons/fa";
-import { authService, notificationService } from "../services/api";
+import { authService, notificationService, dashboardService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import Sidebar from "../components/common/Sidebar";
+import UserProfileCard from "../components/users/UserProfileCard";
 
 const Dashboard = () => {
   const { user, logout, loading, isLandlord, isTenant, isCompany, isAgent } = useAuth();
@@ -25,6 +26,26 @@ const Dashboard = () => {
   const initialTab = searchParams.get('tab') || 'overview';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [notifications, setNotifications] = useState([]);
+  const [stats, setStats] = useState({});
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // Fetch dashboard stats on mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (user) {
+        try {
+          setStatsLoading(true);
+          const response = await dashboardService.getStats();
+          setStats(response.data?.data || {});
+        } catch (error) {
+          console.error("Failed to fetch dashboard stats:", error);
+        } finally {
+          setStatsLoading(false);
+        }
+      }
+    };
+    fetchStats();
+  }, [user]);
 
   // Sync activeTab with URL query parameter
   useEffect(() => {
@@ -141,33 +162,33 @@ const Dashboard = () => {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "2rem",
-              marginBottom: "3rem",
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+              gap: "1rem",
+              marginBottom: "2rem",
             }}
           >
             {isTenant() && (
               <>
-                <StatCard number="12" label="Properties Viewed" />
-                <StatCard number="5" label="Saved Listings" />
-                <StatCard number="2" label="Scheduled Visits" />
+                <StatCard number={statsLoading ? "..." : stats.savedListings || 0} label="Saved Listings" />
+                <StatCard number={statsLoading ? "..." : stats.unreadMessages || 0} label="Unread Messages" />
+                <StatCard number={statsLoading ? "..." : stats.myBids || 0} label="Active Bids" />
               </>
             )}
 
             {(isLandlord() || isAgent()) && (
               <>
-                <StatCard number="3" label="Active Listings" />
-                <StatCard number="28" label="Total Views" />
-                <StatCard number="4" label="New Inquiries" />
-                <StatCard number="2" label="Boosted Listings" />
+                <StatCard number={statsLoading ? "..." : stats.activeListings || 0} label="Active Listings" />
+                <StatCard number={statsLoading ? "..." : stats.totalInquiries || 0} label="New Inquiries" />
+                <StatCard number={statsLoading ? "..." : stats.pendingBids || 0} label="Pending Bids" />
+                <StatCard number={statsLoading ? "..." : stats.boostedListings || 0} label="Boosted Listings" />
               </>
             )}
 
             {isCompany() && (
               <>
-                <StatCard number="2" label="Active Projects" />
-                <StatCard number="15" label="Units Available" />
-                <StatCard number="8" label="Pending Bids" />
+                <StatCard number={statsLoading ? "..." : stats.activeProjects || 0} label="Active Projects" />
+                <StatCard number={statsLoading ? "..." : stats.unitsAvailable || 0} label="Units Available" />
+                <StatCard number={statsLoading ? "..." : stats.pendingBids || 0} label="Pending Bids" />
               </>
             )}
           </div>
@@ -192,28 +213,9 @@ const Dashboard = () => {
                   fontFamily: "var(--font-heading)",
                 }}
               >
-                Recent Activity
+                My Profile
               </h3>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                }}
-              >
-                <ActivityItem
-                  text="You viewed 'Midnight Villa'"
-                  time="2 hours ago"
-                />
-                <ActivityItem
-                  text="Saved 'Gold Coast Penthouse' to wishlist"
-                  time="1 day ago"
-                />
-                <ActivityItem
-                  text="Message sent to Agent Sarah Jenkins"
-                  time="3 days ago"
-                />
-              </div>
+              <UserProfileCard user={user} isOwnProfile={true} />
             </>
           )}
 
@@ -372,22 +374,22 @@ const StatCard = ({ number, label }) => (
   <div
     style={{
       background: "var(--color-primary-light)",
-      padding: "2rem",
-      borderRadius: "12px",
+      padding: "1.25rem",
+      borderRadius: "10px",
       border: "1px solid rgba(255,255,255,0.05)",
     }}
   >
     <div
       style={{
-        fontSize: "3rem",
+        fontSize: "2rem",
         fontWeight: 700,
         color: "var(--color-accent)",
-        marginBottom: "0.5rem",
+        marginBottom: "0.25rem",
       }}
     >
       {number}
     </div>
-    <div style={{ color: "var(--color-text-light)" }}>{label}</div>
+    <div style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>{label}</div>
   </div>
 );
 

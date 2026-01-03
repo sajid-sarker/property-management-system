@@ -22,6 +22,20 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// ============ UPLOAD SERVICE ============
+export const uploadService = {
+  // Upload an image file
+  uploadImage: async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    return api.post("/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+};
+
 
 // ============ NOTIFICATION SERVICE ============
 export const notificationService = {
@@ -256,6 +270,12 @@ export const messageService = {
 
   // Get messages with a specific user
   getMessages: (userId) => api.get(`/messages/${userId}`),
+};
+
+// ============ DASHBOARD SERVICE ============
+export const dashboardService = {
+  // Get dashboard statistics based on user role
+  getStats: () => api.get("/dashboard/stats"),
 };
 
 export default api;

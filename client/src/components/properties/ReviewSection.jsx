@@ -17,8 +17,14 @@ import { propertyService } from '../../services/api';
  * ReviewSection Component
  * Displays property reviews from previous tenants and allows authenticated users to add reviews
  * Feature 4 of Requirement 3: Show reviews from previous tenants
+ * 
+ * Props:
+ * - propertyId: ID of the property
+ * - landlordId: ID of the property owner (to prevent self-reviews)
+ * - initialReviews: Array of existing reviews
+ * - initialAverageRating: Current average rating
  */
-const ReviewSection = ({ propertyId, initialReviews = [], initialAverageRating = 0 }) => {
+const ReviewSection = ({ propertyId, landlordId, initialReviews = [], initialAverageRating = 0 }) => {
     const { user } = useAuth();
     const [reviews, setReviews] = useState(initialReviews);
     const [averageRating, setAverageRating] = useState(initialAverageRating);
@@ -28,6 +34,13 @@ const ReviewSection = ({ propertyId, initialReviews = [], initialAverageRating =
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Check if the current user is the property owner
+    const isPropertyOwner = user && landlordId && (
+        user._id === landlordId || 
+        user.id === landlordId ||
+        user._id?.toString() === landlordId?.toString()
+    );
 
     // Format date for display
     const formatDate = (dateString) => {
@@ -225,10 +238,20 @@ const ReviewSection = ({ propertyId, initialReviews = [], initialAverageRating =
                     fontFamily="'Playfair Display', serif"
                     mb={4}
                 >
-                    {user ? 'Share Your Experience' : 'Log in to Write a Review'}
+                    {isPropertyOwner 
+                        ? 'Property Owner' 
+                        : user 
+                            ? 'Share Your Experience' 
+                            : 'Log in to Write a Review'}
                 </Heading>
 
-                {user ? (
+                {isPropertyOwner ? (
+                    <Box textAlign="center" py={4}>
+                        <Text color="#a0a0a0" fontSize="sm">
+                            You cannot review your own property.
+                        </Text>
+                    </Box>
+                ) : user ? (
                     <VStack gap={4} align="stretch">
                         {/* Star Rating Input */}
                         <Box>

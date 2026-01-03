@@ -81,7 +81,7 @@ export const getPropertyById = async (req, res) => {
       });
     }
 
-    const property = await Property.findById(id).populate("landlord", "name email");
+    const property = await Property.findById(id).populate("landlord", "name email image role description phoneNumber");
 
     if (!property) {
       return res.status(404).json({
@@ -432,6 +432,14 @@ export const addReview = async (req, res) => {
     const property = await Property.findById(id);
     if (!property) {
       return res.status(404).json({ success: false, message: "Property not found" });
+    }
+
+    // Prevent property owner from reviewing their own property
+    if (property.landlord && property.landlord.toString() === userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You cannot review your own property"
+      });
     }
 
     // Check if user already reviewed this property

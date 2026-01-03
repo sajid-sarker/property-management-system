@@ -64,10 +64,9 @@ export const AuthProvider = ({ children }) => {
   const isLandlord = () => user?.role === 'landlord' || user?.role === 'agent';
   const isTenant = () => user?.role === 'tenant' || user?.role === 'general';
   const isCompany = () => user?.role === 'company';
-  const isAgent = () => user?.role === 'agent';
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, hasRole, isLandlord, isTenant, isCompany, isAgent }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, hasRole, isLandlord, isTenant, isCompany }}>
       {children}
     </AuthContext.Provider>
   );

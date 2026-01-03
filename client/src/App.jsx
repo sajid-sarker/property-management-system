@@ -10,6 +10,7 @@ import PropertyDetailsPage from "./pages/PropertyDetailsPage.jsx";
 import EditPropertyPage from "./pages/EditPropertyPage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import UserProfilePage from "./pages/UserProfilePage.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
 import DevelopmentRequests from "./pages/DevelopmentRequests.jsx";
 import AddPropertyPage from "./pages/AddPropertyPage.jsx";
@@ -32,11 +33,9 @@ function App() {
         <Route path="/edit-property/:id" element={<EditPropertyPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/user/:userId" element={<UserProfilePage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
-        <Route
-          path="/development-requests"
-          element={<DevelopmentRequests />}
-        />
+        <Route path="/development-requests" element={<DevelopmentRequests />} />
         <Route path="/add-property" element={<AddPropertyPage />} />
         <Route path="/messages" element={<MessagesPage />} />
         {/* Fallback route */}
@@ -47,5 +46,3 @@ function App() {
 }
 
 export default App;
-
-
