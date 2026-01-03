@@ -9,7 +9,7 @@ const notificationSchema = new mongoose.Schema(
     message: String,
     type: {
       type: String,
-      enum: ['bid_received', 'bid_accepted', 'bid_rejected', 'general'],
+      enum: ['bid_received', 'bid_accepted', 'bid_rejected', 'general', 'price_change'],
       default: 'general'
     },
     relatedId: {

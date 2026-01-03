@@ -83,9 +83,18 @@ export const addToWishlist = async (req, res) => {
     }
 
     // Add property to wishlist
+    // Capture the current price for price change tracking
+    let currentPrice = null;
+    if (property.listingType === 'sell') {
+      currentPrice = property.currentPrice || property.startingPrice || property.price;
+    } else {
+      currentPrice = property.price;
+    }
+
     wishlist.properties.push({
       property: propertyId,
       notes: "",
+      priceWhenAdded: currentPrice,
       addedAt: new Date(),
     });
 
@@ -215,7 +224,7 @@ export const checkInWishlist = async (req, res) => {
     const { propertyId } = req.params;
 
     const wishlist = await Wishlist.findOne({ user: req.user._id });
-    
+
     if (!wishlist) {
       return res.status(200).json({
         success: true,
