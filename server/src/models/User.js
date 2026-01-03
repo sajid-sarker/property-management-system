@@ -39,6 +39,7 @@ const userSchema = new mongoose.Schema(
     description: {
       type: String,
       default: "LuxeEstate member",
+      maxlength: 500,
     },
     // General users only - made optional
     wishlist: {

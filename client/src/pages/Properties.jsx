@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Box, Grid, Flex, Text, Heading, HStack, Input } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { propertyService } from '../services/api';
@@ -17,6 +18,9 @@ import PropertyCard from '../components/properties/PropertyCard';
  */
 const Properties = () => {
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
+    const showMyListings = searchParams.get('myListings') === 'true';
+    
     const [properties, setProperties] = useState([]);
     const [myListings, setMyListings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -33,19 +37,28 @@ const Properties = () => {
     const fetchProperties = async () => {
         try {
             setLoading(true);
-            const params = {};
-            if (minPrice) params.minPrice = minPrice;
-            if (maxPrice) params.maxPrice = maxPrice;
-            if (location) params.location = location;
-            if (minRating) params.minRating = minRating;
-            if (status) params.status = status;
-            if (listingType) params.listingType = listingType;
+            
+            // If showing my listings, use the dedicated endpoint
+            if (showMyListings && user) {
+                const response = await propertyService.getMyListings();
+                const data = response.data?.data || response.data || [];
+                setProperties(Array.isArray(data) ? data : []);
+            } else {
+                // Fetch all properties with filters
+                const params = {};
+                if (minPrice) params.minPrice = minPrice;
+                if (maxPrice) params.maxPrice = maxPrice;
+                if (location) params.location = location;
+                if (minRating) params.minRating = minRating;
+                if (status) params.status = status;
+                if (listingType) params.listingType = listingType;
 
-            const response = await propertyService.getAll(params);
+                const response = await propertyService.getAll(params);
 
-            // Handle both { success: true, data: [...] } and direct array responses
-            const data = response.data?.data || response.data || [];
-            setProperties(Array.isArray(data) ? data : []);
+                // Handle both { success: true, data: [...] } and direct array responses
+                const data = response.data?.data || response.data || [];
+                setProperties(Array.isArray(data) ? data : []);
+            }
         } catch (error) {
             console.error('Failed to fetch properties', error);
             setProperties([]);
@@ -63,7 +76,7 @@ const Properties = () => {
     useEffect(() => {
       // Raiyan changes start here
         fetchProperties();
-    }, []); // Initial load
+    }, [showMyListings, user]); // Re-fetch when showMyListings or user changes
 
     const handleApplyFilters = () => {
         fetchProperties();
@@ -72,9 +85,9 @@ const Properties = () => {
     // Filter properties based on selection
     // Client-side filtering for Type (Sale/Rent) as that's often a toggle
     const filteredProperties = properties.filter((p) => {
-        const propType = (p.type || '').toLowerCase();
-        if (filterType === 'sale') return propType.includes('sale') || p.isForSale;
-        if (filterType === 'rent') return propType.includes('rent') || p.isForRent;
+        const propListingType = (p.listingType || '').toLowerCase();
+        if (filterType === 'sell') return propListingType === 'sell';
+        if (filterType === 'rent') return propListingType === 'rent';
         return true;
     });
   // Raiyan changes end here
@@ -139,10 +152,16 @@ const Properties = () => {
                             fontWeight="600"
                             mb="2"
                         >
-                            Exclusive <Text as="span" color="#d4af37">Collection</Text>
+                            {showMyListings ? (
+                                <>My <Text as="span" color="#d4af37">Properties</Text></>
+                            ) : (
+                                <>Exclusive <Text as="span" color="#d4af37">Collection</Text></>
+                            )}
                         </Heading>
                         <Text color="#a0a0a0">
-                            Discover our handpicked selection of premium properties.
+                            {showMyListings 
+                                ? 'Manage your property listings.' 
+                                : 'Discover our handpicked selection of premium properties.'}
                         </Text>
                     </Box>
 
@@ -162,12 +181,10 @@ const Properties = () => {
                             All
                         </FilterButton>
                         <FilterButton
-                            active={filterType === 'sale'}
-                            onClick={() => setFilterType('sale')}
-//                             active={filter === 'sell'}
-//                             onClick={() => setFilter('sell')}
+                            active={filterType === 'sell'}
+                            onClick={() => setFilterType('sell')}
                         >
-                            For Sell
+                            For Sale
                         </FilterButton>
                         <FilterButton
                             active={filterType === 'rent'}
@@ -175,14 +192,6 @@ const Properties = () => {
                         >
                             For Rent
                         </FilterButton>
-                        {isLandlord && (
-                            <FilterButton
-                                active={filterType === 'my-listings'}
-                                onClick={() => setFilterType('my-listings')}
-                            >
-                                My Listings
-                            </FilterButton>
-                        )}
                     </HStack>
                 </Flex>
 

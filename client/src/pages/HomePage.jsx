@@ -249,8 +249,8 @@ const HomePage = () => {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))",
-                gap: "2.5rem",
+                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                gap: "2rem",
               }}
             >
               {properties.map((prop, idx) => (
@@ -376,7 +376,7 @@ const PropertyCard = ({ data, index }) => (
       border: "1px solid rgba(255,255,255,0.05)",
     }}
   >
-    <div style={{ height: "300px", overflow: "hidden", position: "relative" }}>
+    <div style={{ height: "200px", overflow: "hidden", position: "relative" }}>
       <img
         src={data.image}
         alt={data.title}
@@ -412,7 +412,7 @@ const PropertyCard = ({ data, index }) => (
         </h3>
       </div>
     </div>
-    <div style={{ padding: "1.5rem" }}>
+    <div style={{ padding: "1rem" }}>
       <p
         style={{
           color: "var(--color-text-light)",

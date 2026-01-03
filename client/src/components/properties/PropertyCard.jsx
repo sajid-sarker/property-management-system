@@ -116,7 +116,7 @@ const PropertyCard = ({ data, index = 0 }) => {
                     )}
 
                     {/* Image Container */}
-                    <Box height="280px" overflow="hidden" position="relative">
+                    <Box height="200px" overflow="hidden" position="relative">
                         <Box
                             as="img"
                             src={imageUrl}
@@ -164,11 +164,11 @@ const PropertyCard = ({ data, index = 0 }) => {
                     </Box>
 
                     {/* Content */}
-                    <Box p="6">
+                    <Box p="4">
                         <Flex justify="space-between" align="center" mb="2">
                             <Text
                                 fontFamily="'Playfair Display', serif"
-                                fontSize="1.25rem"
+                                fontSize="1.1rem"
                                 fontWeight="600"
                                 color="white"
                                 noOfLines={1}

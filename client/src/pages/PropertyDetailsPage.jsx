@@ -521,6 +521,7 @@ const PropertyDetailsPage = () => {
           {/* Reviews Section (Feature 4 of Requirement 3) */}
           <ReviewSection
             propertyId={property._id || id}
+            landlordId={landlordId}
             initialReviews={property.reviews || []}
             initialAverageRating={property.averageRating || 0}
           />
@@ -550,13 +551,21 @@ const PropertyDetailsPage = () => {
             
             {/* Landlord Info */}
             {property.landlord && (
-              <div
+              <Link
+                to={`/user/${property.landlord._id || property.landlord}`}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: "1rem",
                   marginBottom: "2rem",
+                  textDecoration: "none",
+                  color: "inherit",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
+                  transition: "background 0.2s",
                 }}
+                onMouseOver={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+                onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
               >
                 <img
                   src={property.landlord.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(property.landlord.name || 'Owner')}&background=d4af37&color=0a0a0f`}
@@ -566,10 +575,11 @@ const PropertyDetailsPage = () => {
                     height: "60px",
                     borderRadius: "50%",
                     border: "2px solid var(--color-accent)",
+                    objectFit: "cover",
                   }}
                 />
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: "1.1rem" }}>
+                  <div style={{ fontWeight: 600, fontSize: "1.1rem", color: "white" }}>
                     {property.landlord.name || "Property Owner"}
                   </div>
                   <div
@@ -581,8 +591,17 @@ const PropertyDetailsPage = () => {
                   >
                     {property.landlord.role || "Landlord"}
                   </div>
+                  <div
+                    style={{
+                      color: "var(--color-accent)",
+                      fontSize: "0.8rem",
+                      marginTop: "0.25rem",
+                    }}
+                  >
+                    View Profile →
+                  </div>
                 </div>
-              </div>
+              </Link>
             )}
 
             {/* Message Form */}

@@ -115,8 +115,8 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                         <SidebarItem
                             icon={<FaHome />}
                             label="My Properties"
-                            active={isRouteActive('/properties')}
-                            onClick={() => navigate('/properties')}
+                            active={location.pathname === '/properties' && location.search.includes('myListings=true')}
+                            onClick={() => navigate('/properties?myListings=true')}
                         />
                         <SidebarItem
                             icon={<FaPlus />}
@@ -138,8 +138,8 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                         <SidebarItem
                             icon={<FaHome />}
                             label="My Properties"
-                            active={isRouteActive('/properties')}
-                            onClick={() => navigate('/properties')}
+                            active={location.pathname === '/properties' && location.search.includes('myListings=true')}
+                            onClick={() => navigate('/properties?myListings=true')}
                         />
                         <SidebarItem
                             icon={<FaBuilding />}

@@ -10,8 +10,9 @@ import {
     Textarea,
     Icon,
 } from '@chakra-ui/react';
-import { FaRocket } from 'react-icons/fa';
+import { FaRocket, FaCloudUploadAlt, FaCheck, FaSpinner } from 'react-icons/fa';
 import Button from '../common/Button';
+import { uploadService } from '../../services/api';
 
 /**
  * Reusable PropertyForm Component
@@ -44,9 +45,46 @@ const PropertyForm = ({
         isBiddable: initialData.isBiddable || false,
     });
 
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState('');
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setUploadError('Please select an image file');
+            return;
+        }
+
+        // Validate file size (max 1MB)
+        if (file.size > 1 * 1024 * 1024) {
+            setUploadError('Image must be less than 1MB');
+            return;
+        }
+
+        setUploading(true);
+        setUploadError('');
+
+        try {
+            const response = await uploadService.uploadImage(file);
+            const imagePath = response.data?.data || response.data;
+            
+            // Construct full URL for the image
+            const imageUrl = `http://localhost:5000${imagePath}`;
+            setFormData((prev) => ({ ...prev, image: imageUrl }));
+        } catch (error) {
+            console.error('Failed to upload image:', error);
+            setUploadError('Failed to upload image. Please try again.');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleSubmit = (e) => {
@@ -288,7 +326,16 @@ const PropertyForm = ({
                         value={formData.type}
                         onChange={handleChange}
                         width="100%"
-                        {...inputStyles}
+                        bg="rgba(0, 0, 0, 0.3)"
+                        border="1px solid rgba(255, 255, 255, 0.1)"
+                        borderRadius="8px"
+                        color="white"
+                        p="2.5"
+                        _focus={{
+                            borderColor: '#d4af37',
+                            boxShadow: '0 0 0 2px rgba(212, 175, 55, 0.2)',
+                            outline: 'none',
+                        }}
                         sx={{
                             '& option': {
                                 background: '#14141f',
@@ -345,19 +392,59 @@ const PropertyForm = ({
                 </GridItem>
 
 
-                {/* Image URL Input (Simplified for reliability) */}
+                {/* Image Upload Input */}
                 <GridItem colSpan={{ base: 1, md: 2 }}>
-                    <Text {...labelStyles}>Property Image URL</Text>
-                    <Input
-                        name="image"
-                        value={formData.image}
-                        onChange={handleChange}
-                        placeholder="e.g. https://images.unsplash.com/photo-..."
-                        required
-                        {...inputStyles}
-                    />
+                    <Text {...labelStyles}>Property Image</Text>
+                    <Box
+                        as="label"
+                        display="flex"
+                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent="center"
+                        p="6"
+                        borderRadius="12px"
+                        border="2px dashed"
+                        borderColor={formData.image ? '#d4af37' : 'rgba(255, 255, 255, 0.2)'}
+                        bg={formData.image ? 'rgba(212, 175, 55, 0.05)' : 'rgba(0, 0, 0, 0.3)'}
+                        cursor="pointer"
+                        transition="all 0.2s ease"
+                        _hover={{
+                            borderColor: '#d4af37',
+                            bg: 'rgba(212, 175, 55, 0.1)',
+                        }}
+                    >
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            style={{ display: 'none' }}
+                        />
+                        {uploading ? (
+                            <VStack gap="2">
+                                <Icon as={FaSpinner} color="#d4af37" boxSize="8" className="spin" />
+                                <Text color="#a0a0a0">Uploading...</Text>
+                            </VStack>
+                        ) : formData.image ? (
+                            <VStack gap="2">
+                                <Icon as={FaCheck} color="#4ade80" boxSize="8" />
+                                <Text color="#4ade80" fontWeight="600">Image Uploaded</Text>
+                                <Text color="#a0a0a0" fontSize="sm">Click to change</Text>
+                            </VStack>
+                        ) : (
+                            <VStack gap="2">
+                                <Icon as={FaCloudUploadAlt} color="#d4af37" boxSize="10" />
+                                <Text color="white" fontWeight="600">Click to upload image</Text>
+                                <Text color="#a0a0a0" fontSize="sm">PNG, JPG up to 1MB</Text>
+                            </VStack>
+                        )}
+                    </Box>
+                    {uploadError && (
+                        <Text color="#f87171" fontSize="sm" mt="2">
+                            {uploadError}
+                        </Text>
+                    )}
                     {formData.image && (
-                        <Box mt="2" position="relative">
+                        <Box mt="4" position="relative">
                             <img
                                 src={formData.image}
                                 alt="Property Preview"
@@ -370,7 +457,7 @@ const PropertyForm = ({
                                 }}
                                 onError={(e) => {
                                     e.target.onerror = null;
-                                    e.target.src = 'https://placehold.co/800x400/14141f/d4af37?text=Invalid+Image+URL';
+                                    e.target.src = 'https://placehold.co/800x400/14141f/d4af37?text=Image+Preview';
                                 }}
                             />
                         </Box>
