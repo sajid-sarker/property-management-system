@@ -16,6 +16,17 @@ const notificationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: false
     },
+    // Additional fields for bid notifications
+    bidId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bid",
+      required: false
+    },
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
+      required: false
+    },
     isRead: { type: Boolean, default: false },
   },
   { timestamps: true }
@@ -24,3 +35,4 @@ const notificationSchema = new mongoose.Schema(
 const Notification = mongoose.model("Notification", notificationSchema);
 
 export default Notification;
+

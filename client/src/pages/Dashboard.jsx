@@ -13,8 +13,10 @@ import {
   FaSearch,
   FaRocket,
   FaListAlt,
+  FaCheck,
+  FaHardHat,
 } from "react-icons/fa";
-import { authService, notificationService, dashboardService } from "../services/api";
+import { authService, notificationService, dashboardService, projectService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import Sidebar from "../components/common/Sidebar";
 import UserProfileCard from "../components/users/UserProfileCard";
@@ -28,6 +30,11 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [stats, setStats] = useState({});
   const [statsLoading, setStatsLoading] = useState(true);
+  const [underDevProjects, setUnderDevProjects] = useState([]);
+  const [underDevLoading, setUnderDevLoading] = useState(false);
+  const [acceptingBid, setAcceptingBid] = useState(null);
+  const [acceptedBids, setAcceptedBids] = useState(new Set());
+
 
   // Fetch dashboard stats on mount
   useEffect(() => {
@@ -71,6 +78,74 @@ const Dashboard = () => {
     }
   }, [activeTab]);
 
+  // Fetch under development projects for landlords
+  useEffect(() => {
+    const fetchUnderDevProjects = async () => {
+      if (user && isLandlord() && activeTab === "overview") {
+        try {
+          setUnderDevLoading(true);
+          const response = await projectService.getUnderDevelopment();
+          setUnderDevProjects(response.data?.data || []);
+        } catch (error) {
+          console.error("Failed to fetch under development projects:", error);
+        } finally {
+          setUnderDevLoading(false);
+        }
+      }
+    };
+    fetchUnderDevProjects();
+  }, [user, activeTab]);
+
+  // Handle accepting a bid (landlord)
+  const handleAcceptBid = async (notification) => {
+    if (!notification.projectId || !notification.bidId) {
+      // Use relatedId as bidId if bidId not set
+      if (!notification.relatedId) {
+        alert("Cannot accept this bid - missing bid reference");
+        return;
+      }
+    }
+
+    const bidId = notification.bidId || notification.relatedId;
+
+    if (!window.confirm("Are you sure you want to accept this proposal? This will reject all other bids.")) {
+      return;
+    }
+
+    setAcceptingBid(notification._id);
+    try {
+      // We need to get the project ID from the bid
+      // First, let's try to get it from notification
+      let projectId = notification.projectId;
+
+      if (!projectId) {
+        // If projectId not in notification, we need to fetch the bid to get project
+        alert("Unable to accept - project reference missing. Please try refreshing.");
+        setAcceptingBid(null);
+        return;
+      }
+
+      await projectService.acceptBid(projectId, bidId);
+
+      // Mark this bid as accepted so the button won't show again
+      setAcceptedBids(prev => new Set([...prev, notification._id]));
+
+      alert("Proposal accepted successfully!");
+
+      // Refresh notifications
+      const response = await notificationService.getUserNotifications();
+      setNotifications(response.data);
+
+      // Refresh under development projects
+      const devResponse = await projectService.getUnderDevelopment();
+      setUnderDevProjects(devResponse.data?.data || []);
+    } catch (error) {
+      console.error("Failed to accept bid:", error);
+      alert(error.response?.data?.message || "Failed to accept proposal. Please try again.");
+    } finally {
+      setAcceptingBid(null);
+    }
+  };
 
   const handleLogout = () => {
     authService.logout();
@@ -216,6 +291,95 @@ const Dashboard = () => {
                 My Profile
               </h3>
               <UserProfileCard user={user} isOwnProfile={true} />
+
+              {/* Under Development Properties Section - Landlords Only */}
+              {isLandlord() && (
+                <div style={{ marginTop: "2.5rem" }}>
+                  <h3
+                    style={{
+                      color: "white",
+                      marginBottom: "1.5rem",
+                      fontFamily: "var(--font-heading)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <FaHardHat style={{ color: "var(--color-accent)" }} />
+                    Under Development Properties
+                  </h3>
+
+                  {underDevLoading ? (
+                    <div style={{ color: "var(--color-text-light)", padding: "1rem" }}>
+                      Loading...
+                    </div>
+                  ) : underDevProjects.length === 0 ? (
+                    <div
+                      style={{
+                        padding: "2rem",
+                        background: "rgba(0,0,0,0.2)",
+                        borderRadius: "12px",
+                        textAlign: "center",
+                        color: "var(--color-text-light)",
+                      }}
+                    >
+                      No properties under development yet. Accept a proposal to get started!
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+                      {underDevProjects.map((project) => (
+                        <Link
+                          key={project._id}
+                          to={`/under-development/${project._id}`}
+                          style={{ textDecoration: "none" }}
+                        >
+                          <div
+                            style={{
+                              padding: "1.5rem",
+                              background: "rgba(0,0,0,0.2)",
+                              borderRadius: "12px",
+                              border: "1px solid rgba(212, 175, 55, 0.2)",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                            }}
+                            className="hover-scale"
+                          >
+                            <h4 style={{ color: "var(--color-accent)", marginBottom: "0.5rem" }}>
+                              {project.title}
+                            </h4>
+                            <p style={{ color: "var(--color-text-light)", fontSize: "0.9rem", marginBottom: "0.75rem" }}>
+                              {project.location || project.address?.city || "Location not specified"}
+                            </p>
+                            {project.acceptedBid && (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  paddingTop: "0.75rem",
+                                  borderTop: "1px solid rgba(255,255,255,0.1)",
+                                }}
+                              >
+                                <span style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>
+                                  Accepted Amount:
+                                </span>
+                                <span style={{ color: "#4ade80", fontWeight: 600 }}>
+                                  ${project.acceptedBid.amount?.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                            {project.selectedCompany && (
+                              <div style={{ color: "var(--color-text-light)", fontSize: "0.8rem", marginTop: "0.5rem" }}>
+                                Company: {project.selectedCompany.name}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
@@ -239,13 +403,53 @@ const Dashboard = () => {
               >
                 {notifications.length > 0 ? (
                   notifications.map((notif) => (
-                    <ActivityItem
+                    <div
                       key={notif._id}
-                      text={notif.message}
-                      time={new Date(notif.createdAt).toLocaleString()}
-                      isHighlight={!notif.isRead}
-                      link={notif.relatedId && notif.type !== 'general' ? `/property/${notif.relatedId}` : null}
-                    />
+                      style={{
+                        padding: "1rem 1.25rem",
+                        background: "rgba(0,0,0,0.2)",
+                        borderRadius: "8px",
+                        borderLeft: !notif.isRead ? "3px solid var(--color-accent)" : "none",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ color: "var(--color-text-main)", marginBottom: "0.5rem" }}>
+                            {notif.message}
+                          </div>
+                          <div style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>
+                            {new Date(notif.createdAt).toLocaleString()}
+                          </div>
+                        </div>
+
+                        {/* Accept Proposal Button for bid_received notifications */}
+                        {notif.type === "bid_received" && isLandlord() && !acceptedBids.has(notif._id) && (
+                          <button
+                            onClick={() => handleAcceptBid(notif)}
+                            disabled={acceptingBid === notif._id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.5rem",
+                              padding: "0.5rem 1rem",
+                              background: "linear-gradient(135deg, #4ade80, #22c55e)",
+                              border: "none",
+                              borderRadius: "6px",
+                              color: "white",
+                              cursor: acceptingBid === notif._id ? "wait" : "pointer",
+                              fontWeight: 600,
+                              fontSize: "0.85rem",
+                              whiteSpace: "nowrap",
+                              opacity: acceptingBid === notif._id ? 0.7 : 1,
+                              transition: "all 0.2s ease",
+                            }}
+                          >
+                            <FaCheck />
+                            {acceptingBid === notif._id ? "Accepting..." : "Accept Proposal"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   ))
                 ) : (
                   <div style={{ color: "var(--color-text-light)" }}>

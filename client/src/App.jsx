@@ -17,6 +17,7 @@ import AddPropertyPage from "./pages/AddPropertyPage.jsx";
 import ListForDevelopmentPage from "./pages/ListForDevelopmentPage.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
 import MessagesPage from "./pages/MessagesPage.jsx";
+import UnderDevelopmentDetail from "./pages/UnderDevelopmentDetail.jsx";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
         <Route path="/add-property" element={<AddPropertyPage />} />
         <Route path="/list-for-development" element={<ListForDevelopmentPage />} />
         <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/under-development/:id" element={<UnderDevelopmentDetail />} />
         {/* Fallback route */}
         <Route path="*" element={<HomePage />} />
       </Routes>
