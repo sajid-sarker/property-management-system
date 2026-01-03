@@ -12,6 +12,7 @@ import {
     FaBell,
     FaSearch,
     FaRocket,
+    FaHardHat,
 } from 'react-icons/fa';
 import { authService, messageService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -25,7 +26,7 @@ import { useAuth } from '../../contexts/AuthContext';
  * - onTabChange: function - Callback when a tab is clicked (for in-page navigation)
  */
 const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
-    const { user, isLandlord, isTenant, isCompany, isAgent } = useAuth();
+    const { user, isLandlord, isTenant, isCompany } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [unreadCount, setUnreadCount] = useState(0);
@@ -110,7 +111,7 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                     }}
                 />
 
-                {(isLandlord() || isAgent()) && (
+                {isLandlord() && (
                     <>
                         <SidebarItem
                             icon={<FaHome />}
@@ -123,6 +124,12 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                             label="Add Property"
                             active={isRouteActive('/add-property')}
                             onClick={() => navigate('/add-property')}
+                        />
+                        <SidebarItem
+                            icon={<FaHardHat />}
+                            label="List for Development"
+                            active={isRouteActive('/list-for-development')}
+                            onClick={() => navigate('/list-for-development')}
                         />
                         <SidebarItem
                             icon={<FaRocket />}

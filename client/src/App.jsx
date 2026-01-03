@@ -14,6 +14,7 @@ import UserProfilePage from "./pages/UserProfilePage.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
 import DevelopmentRequests from "./pages/DevelopmentRequests.jsx";
 import AddPropertyPage from "./pages/AddPropertyPage.jsx";
+import ListForDevelopmentPage from "./pages/ListForDevelopmentPage.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
 import MessagesPage from "./pages/MessagesPage.jsx";
 
@@ -37,6 +38,7 @@ function App() {
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/development-requests" element={<DevelopmentRequests />} />
         <Route path="/add-property" element={<AddPropertyPage />} />
+        <Route path="/list-for-development" element={<ListForDevelopmentPage />} />
         <Route path="/messages" element={<MessagesPage />} />
         {/* Fallback route */}
         <Route path="*" element={<HomePage />} />
