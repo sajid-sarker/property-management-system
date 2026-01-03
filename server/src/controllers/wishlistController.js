@@ -83,9 +83,18 @@ export const addToWishlist = async (req, res) => {
     }
 
     // Add property to wishlist
+    // Capture the current price for price change tracking
+    let currentPrice = null;
+    if (property.listingType === 'sell') {
+      currentPrice = property.currentPrice || property.startingPrice || property.price;
+    } else {
+      currentPrice = property.price;
+    }
+
     wishlist.properties.push({
       property: propertyId,
       notes: "",
+      priceWhenAdded: currentPrice,
       addedAt: new Date(),
     });
 
@@ -169,6 +178,16 @@ export const updateNotes = async (req, res) => {
     const { propertyId } = req.params;
     const { notes } = req.body;
 
+    // Validate character limit (500 characters)
+    if (notes && notes.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: "Notes cannot exceed 500 characters",
+        maxLength: 500,
+        currentLength: notes.length,
+      });
+    }
+
     const wishlist = await Wishlist.findOne({ user: req.user._id });
     if (!wishlist) {
       return res.status(404).json({
@@ -190,11 +209,16 @@ export const updateNotes = async (req, res) => {
     }
 
     propertyItem.notes = notes || "";
+    propertyItem.notesLastUpdated = new Date();
     await wishlist.save();
 
     res.status(200).json({
       success: true,
       message: "Notes updated successfully",
+      data: {
+        notes: propertyItem.notes,
+        notesLastUpdated: propertyItem.notesLastUpdated,
+      },
     });
   } catch (error) {
     console.error("Error updating notes:", error);
@@ -215,7 +239,7 @@ export const checkInWishlist = async (req, res) => {
     const { propertyId } = req.params;
 
     const wishlist = await Wishlist.findOne({ user: req.user._id });
-    
+
     if (!wishlist) {
       return res.status(200).json({
         success: true,

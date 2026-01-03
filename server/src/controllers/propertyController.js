@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Property from "../models/Property.js";
 import PropertyBid from "../models/PropertyBid.js";
 import Notification from "../models/Notification.js";
+import { notifyPriceChange } from "../utils/priceChangeNotifier.js";
 
 export const getProperties = async (req, res) => {
   try {
@@ -250,6 +251,26 @@ export const updateProperty = async (req, res) => {
       propertyData.status = "bidding";
     } else if (propertyData.isBiddable === false && existingProperty.status === "bidding") {
       propertyData.status = "available";
+    }
+
+    // Detect price changes and notify wishlist users
+    let oldPrice = null;
+    let newPrice = null;
+
+    if (existingProperty.listingType === "sell") {
+      oldPrice = existingProperty.currentPrice || existingProperty.startingPrice || existingProperty.price;
+      newPrice = propertyData.currentPrice || propertyData.startingPrice || propertyData.price || oldPrice;
+    } else {
+      oldPrice = existingProperty.price;
+      newPrice = propertyData.price || oldPrice;
+    }
+
+    // Trigger price change notifications if price changed
+    if (oldPrice !== newPrice) {
+      // Fire notification async (don't wait for completion)
+      notifyPriceChange(id, existingProperty.title, oldPrice, newPrice).catch(err => {
+        console.error("Failed to send price change notifications:", err);
+      });
     }
 
     const updatedProperty = await Property.findByIdAndUpdate(id, propertyData, {
