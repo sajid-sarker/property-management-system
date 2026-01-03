@@ -18,7 +18,7 @@ const Register = () => {
             const user = await register(formData);
 
             // Role-based redirect
-            if (user.role === 'landlord' || user.role === 'agent') {
+            if (user.role === 'landlord') {
                 navigate('/dashboard'); // Landlords go to dashboard to manage properties
             } else if (user.role === 'company') {
                 navigate('/development-requests'); // Companies go to dev requests

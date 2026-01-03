@@ -20,7 +20,7 @@ import Sidebar from "../components/common/Sidebar";
 import UserProfileCard from "../components/users/UserProfileCard";
 
 const Dashboard = () => {
-  const { user, logout, loading, isLandlord, isTenant, isCompany, isAgent } = useAuth();
+  const { user, logout, loading, isLandlord, isTenant, isCompany } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'overview';
@@ -175,7 +175,7 @@ const Dashboard = () => {
               </>
             )}
 
-            {(isLandlord() || isAgent()) && (
+            {isLandlord() && (
               <>
                 <StatCard number={statsLoading ? "..." : stats.activeListings || 0} label="Active Listings" />
                 <StatCard number={statsLoading ? "..." : stats.totalInquiries || 0} label="New Inquiries" />
@@ -290,7 +290,7 @@ const Dashboard = () => {
                     }}
                   >
                     <span style={{ fontWeight: 600 }}>
-                      Sarah Jenkins (Agent)
+                      Sarah Jenkins (Admin)
                     </span>
                     <span
                       style={{

@@ -160,7 +160,7 @@ export const authService = {
     const roleMap = {
       tenant: "tenant",      // Fixed: was "general", now correctly "tenant"
       landlord: "landlord",
-      agent: "agent",        // Fixed: was "landlord", now correctly "agent"
+
       company: "company",
     };
 

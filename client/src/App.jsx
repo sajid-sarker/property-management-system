@@ -9,6 +9,7 @@ import PropertyListPage from "./pages/PropertyListPage.jsx";
 import PropertyDetailsPage from "./pages/PropertyDetailsPage.jsx";
 import EditPropertyPage from "./pages/EditPropertyPage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import DashboardRedirect from "./components/common/DashboardRedirect.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import UserProfilePage from "./pages/UserProfilePage.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
@@ -31,7 +32,10 @@ function App() {
         <Route path="/properties/:id" element={<PropertyDetailsPage />} />
         <Route path="/property/:id" element={<PropertyDetailsPage />} />
         <Route path="/edit-property/:id" element={<EditPropertyPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<DashboardRedirect />} />
+        <Route path="/dashboard/tenant" element={<Dashboard />} />
+        <Route path="/dashboard/landlord" element={<Dashboard />} />
+        <Route path="/dashboard/company" element={<Dashboard />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/user/:userId" element={<UserProfilePage />} />
         <Route path="/wishlist" element={<WishlistPage />} />

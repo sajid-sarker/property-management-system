@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
     return user?.role === requiredRole;
   };
 
-  const isLandlord = () => user?.role === 'landlord' || user?.role === 'agent';
+  const isLandlord = () => user?.role === 'landlord';
   const isTenant = () => user?.role === 'tenant' || user?.role === 'general';
   const isCompany = () => user?.role === 'company';
 

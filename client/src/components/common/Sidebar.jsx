@@ -25,7 +25,7 @@ import { useAuth } from '../../contexts/AuthContext';
  * - onTabChange: function - Callback when a tab is clicked (for in-page navigation)
  */
 const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
-    const { user, isLandlord, isTenant, isCompany, isAgent } = useAuth();
+    const { user, isLandlord, isTenant, isCompany } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [unreadCount, setUnreadCount] = useState(0);
@@ -110,7 +110,7 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                     }}
                 />
 
-                {(isLandlord() || isAgent()) && (
+                {isLandlord() && (
                     <>
                         <SidebarItem
                             icon={<FaHome />}
