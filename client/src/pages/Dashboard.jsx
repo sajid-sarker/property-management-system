@@ -34,6 +34,9 @@ const Dashboard = () => {
   const [underDevLoading, setUnderDevLoading] = useState(false);
   const [acceptingBid, setAcceptingBid] = useState(null);
   const [acceptedBids, setAcceptedBids] = useState(new Set());
+  const [companyProjects, setCompanyProjects] = useState([]);
+  const [companyProjectsLoading, setCompanyProjectsLoading] = useState(false);
+
 
 
   // Fetch dashboard stats on mount
@@ -94,6 +97,24 @@ const Dashboard = () => {
       }
     };
     fetchUnderDevProjects();
+  }, [user, activeTab]);
+
+  // Fetch company development projects for company users
+  useEffect(() => {
+    const fetchCompanyProjects = async () => {
+      if (user && isCompany() && activeTab === "overview") {
+        try {
+          setCompanyProjectsLoading(true);
+          const response = await projectService.getCompanyProjects();
+          setCompanyProjects(response.data?.data || []);
+        } catch (error) {
+          console.error("Failed to fetch company projects:", error);
+        } finally {
+          setCompanyProjectsLoading(false);
+        }
+      }
+    };
+    fetchCompanyProjects();
   }, [user, activeTab]);
 
   // Handle accepting a bid (landlord)
@@ -371,6 +392,111 @@ const Dashboard = () => {
                             {project.selectedCompany && (
                               <div style={{ color: "var(--color-text-light)", fontSize: "0.8rem", marginTop: "0.5rem" }}>
                                 Company: {project.selectedCompany.name}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Development Projects Section - Company Users Only */}
+              {isCompany() && (
+                <div style={{ marginTop: "2.5rem" }}>
+                  <h3
+                    style={{
+                      color: "white",
+                      marginBottom: "1.5rem",
+                      fontFamily: "var(--font-heading)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    <FaBuilding style={{ color: "var(--color-accent)" }} />
+                    Development Projects
+                  </h3>
+
+                  {companyProjectsLoading ? (
+                    <div style={{ color: "var(--color-text-light)", padding: "1rem" }}>
+                      Loading...
+                    </div>
+                  ) : companyProjects.length === 0 ? (
+                    <div
+                      style={{
+                        padding: "2rem",
+                        background: "rgba(0,0,0,0.2)",
+                        borderRadius: "12px",
+                        textAlign: "center",
+                        color: "var(--color-text-light)",
+                      }}
+                    >
+                      No accepted development projects yet. Place bids on development requests to get started!
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+                      {companyProjects.map((project) => (
+                        <Link
+                          key={project._id}
+                          to={`/company-project/${project._id}`}
+                          style={{ textDecoration: "none" }}
+                        >
+                          <div
+                            style={{
+                              padding: "1.5rem",
+                              background: "rgba(0,0,0,0.2)",
+                              borderRadius: "12px",
+                              border: "1px solid rgba(212, 175, 55, 0.2)",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                            }}
+                            className="hover-scale"
+                          >
+                            <h4 style={{ color: "var(--color-accent)", marginBottom: "0.5rem" }}>
+                              {project.title}
+                            </h4>
+                            <p style={{ color: "var(--color-text-light)", fontSize: "0.9rem", marginBottom: "0.75rem" }}>
+                              {project.location || project.address?.city || "Location not specified"}
+                            </p>
+
+                            {/* Deadline */}
+                            {project.deadline && (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  marginBottom: "0.5rem",
+                                }}
+                              >
+                                <span style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>
+                                  Estimated Handover:
+                                </span>
+                                <span style={{ color: "var(--color-accent)", fontWeight: 500, fontSize: "0.85rem" }}>
+                                  {new Date(project.deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Amount to Receive */}
+                            {project.acceptedBid && (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  paddingTop: "0.75rem",
+                                  borderTop: "1px solid rgba(255,255,255,0.1)",
+                                }}
+                              >
+                                <span style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>
+                                  Amount to Receive:
+                                </span>
+                                <span style={{ color: "#4ade80", fontWeight: 600 }}>
+                                  ${project.acceptedBid.amount?.toLocaleString()}
+                                </span>
                               </div>
                             )}
                           </div>

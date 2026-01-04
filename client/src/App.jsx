@@ -18,6 +18,8 @@ import ListForDevelopmentPage from "./pages/ListForDevelopmentPage.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
 import MessagesPage from "./pages/MessagesPage.jsx";
 import UnderDevelopmentDetail from "./pages/UnderDevelopmentDetail.jsx";
+import CompanyProjectDetail from "./pages/CompanyProjectDetail.jsx";
+
 
 function App() {
   return (
@@ -42,6 +44,7 @@ function App() {
         <Route path="/list-for-development" element={<ListForDevelopmentPage />} />
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/under-development/:id" element={<UnderDevelopmentDetail />} />
+        <Route path="/company-project/:id" element={<CompanyProjectDetail />} />
         {/* Fallback route */}
         <Route path="*" element={<HomePage />} />
       </Routes>

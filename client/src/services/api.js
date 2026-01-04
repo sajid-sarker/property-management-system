@@ -239,6 +239,12 @@ export const projectService = {
 
   // Get single under development project with bid details
   getUnderDevelopmentById: (id) => api.get(`/projects/under-development/${id}`),
+
+  // Get company's accepted development projects
+  getCompanyProjects: () => api.get("/projects/company-projects"),
+
+  // Get single company development project by ID
+  getCompanyProjectById: (id) => api.get(`/projects/company-projects/${id}`),
 };
 
 // ============ WISHLIST SERVICE ============

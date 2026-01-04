@@ -12,7 +12,10 @@ import {
     acceptBid,
     getUnderDevelopmentProjects,
     getUnderDevelopmentProjectById,
+    getCompanyDevelopmentProjects,
+    getCompanyProjectById,
 } from "../controllers/projectController.js";
+
 
 const router = express.Router();
 
@@ -28,6 +31,11 @@ router.get("/my-bids", protect, getMyBids);
 // Landlord's under development projects
 router.get("/under-development", protect, getUnderDevelopmentProjects);
 router.get("/under-development/:id", protect, getUnderDevelopmentProjectById);
+
+// Company's accepted development projects
+router.get("/company-projects", protect, getCompanyDevelopmentProjects);
+router.get("/company-projects/:id", protect, getCompanyProjectById);
+
 
 // Public routes
 router.get("/", getAllProjects);
