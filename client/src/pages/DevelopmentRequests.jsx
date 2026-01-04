@@ -47,7 +47,11 @@ const DevelopmentRequests = () => {
         try {
             const response = await projectService.getAll();
             const data = response.data?.data || response.data || [];
-            setRequests(Array.isArray(data) ? data : []);
+            // Filter out InProgress projects (already accepted) - only show Open projects
+            const openProjects = Array.isArray(data)
+                ? data.filter(p => p.status === 'Open' || !p.status)
+                : [];
+            setRequests(openProjects);
         } catch (error) {
             console.error("Failed to fetch projects", error);
             // Fallback to sample data if API fails

@@ -1,5 +1,7 @@
 import Project from "../models/Project.js";
 import Bid from "../models/Bid.js";
+import Notification from "../models/Notification.js";
+import User from "../models/User.js";
 
 /**
  * Project Controller
@@ -90,7 +92,7 @@ export const placeBid = async (req, res) => {
         const companyId = req.user?._id || req.user?.id || req.user?.userId;
 
         // Check if project exists
-        const project = await Project.findById(projectId);
+        const project = await Project.findById(projectId).populate("owner", "name email");
         if (!project) {
             return res.status(404).json({ success: false, message: "Project not found" });
         }
@@ -115,8 +117,24 @@ export const placeBid = async (req, res) => {
         project.bids.push(bid._id);
         await project.save();
 
-        // Populate company info for response
+        // Populate company info for response and notification
         await bid.populate("company", "name email");
+
+        // Create notification for the landlord (project owner)
+        if (project.owner) {
+            const companyName = bid.company?.name || "A company";
+            const notificationMessage = `New bid received on "${project.title}": $${amount.toLocaleString()} by ${companyName}`;
+
+            await Notification.create({
+                user: project.owner._id,
+                message: notificationMessage,
+                type: "bid_received",
+                relatedId: bid._id,
+                bidId: bid._id,
+                projectId: project._id,
+                isRead: false,
+            });
+        }
 
         res.status(201).json({ success: true, message: "Bid placed successfully", data: bid });
     } catch (error) {
@@ -264,6 +282,326 @@ export const getMyBids = async (req, res) => {
         });
     } catch (error) {
         console.error("Error fetching my bids:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// @desc    Accept a bid on a project (landlord only)
+// @route   PATCH /api/projects/:id/bid/:bidId/accept
+// @access  Private (Owner/Landlord)
+export const acceptBid = async (req, res) => {
+    try {
+        const { id: projectId, bidId } = req.params;
+        const userId = req.user?._id || req.user?.id || req.user?.userId;
+
+        // Find the project and verify ownership
+        const project = await Project.findById(projectId).populate("owner", "name email");
+        if (!project) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        // Verify the user is the project owner
+        if (project.owner._id.toString() !== userId.toString()) {
+            return res.status(403).json({ success: false, message: "Not authorized - only the project owner can accept bids" });
+        }
+
+        // Find the bid
+        const bid = await Bid.findById(bidId).populate("company", "name email");
+        if (!bid) {
+            return res.status(404).json({ success: false, message: "Bid not found" });
+        }
+
+        // Verify bid belongs to this project
+        if (bid.project.toString() !== projectId.toString()) {
+            return res.status(400).json({ success: false, message: "Bid does not belong to this project" });
+        }
+
+        // Check if bid can still be accepted
+        if (bid.status !== "pending") {
+            return res.status(400).json({ success: false, message: `Cannot accept bid - bid status is ${bid.status}` });
+        }
+
+        // Update bid status to accepted
+        bid.status = "accepted";
+        await bid.save();
+
+        // Update project status to InProgress and set selectedCompany
+        project.status = "InProgress";
+        project.selectedCompany = bid.company._id;
+        await project.save();
+
+        // Reject all other pending bids on this project
+        await Bid.updateMany(
+            { project: projectId, _id: { $ne: bidId }, status: "pending" },
+            { status: "rejected" }
+        );
+
+        // Create notification for the company (bid owner) that their bid was accepted
+        const companyName = bid.company?.name || "Company";
+        await Notification.create({
+            user: bid.company._id,
+            message: `Congratulations! Your bid of $${bid.amount.toLocaleString()} on "${project.title}" has been accepted.`,
+            type: "bid_accepted",
+            relatedId: project._id,
+            isRead: false,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Bid accepted successfully",
+            data: {
+                project: {
+                    _id: project._id,
+                    title: project.title,
+                    status: project.status,
+                },
+                acceptedBid: {
+                    _id: bid._id,
+                    amount: bid.amount,
+                    company: bid.company,
+                    proposalText: bid.proposalText,
+                },
+            },
+        });
+    } catch (error) {
+        console.error("Error accepting bid:", error);
+        res.status(500).json({ success: false, message: error.message || "Server error" });
+    }
+};
+
+// @desc    Get landlord's under development projects
+// @route   GET /api/projects/under-development
+// @access  Private (Landlord)
+export const getUnderDevelopmentProjects = async (req, res) => {
+    try {
+        const userId = req.user?._id || req.user?.id || req.user?.userId;
+
+        // Find all projects owned by this landlord that are InProgress
+        const projects = await Project.find({
+            owner: userId,
+            status: "InProgress",
+        })
+            .populate("selectedCompany", "name email")
+            .populate({
+                path: "bids",
+                match: { status: "accepted" },
+                populate: { path: "company", select: "name email" },
+            })
+            .sort({ updatedAt: -1 });
+
+        // Map projects to include accepted bid info
+        const projectsWithBids = projects.map((project) => {
+            const acceptedBid = project.bids.find((b) => b.status === "accepted");
+            return {
+                _id: project._id,
+                projectId: project.projectId,
+                title: project.title,
+                description: project.description,
+                location: project.location,
+                address: project.address,
+                status: project.status,
+                images: project.images,
+                acceptedBid: acceptedBid
+                    ? {
+                        _id: acceptedBid._id,
+                        amount: acceptedBid.amount,
+                        proposalText: acceptedBid.proposalText,
+                        estimatedDays: acceptedBid.estimatedDays,
+                        company: acceptedBid.company,
+                    }
+                    : null,
+                selectedCompany: project.selectedCompany,
+                updatedAt: project.updatedAt,
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            count: projectsWithBids.length,
+            data: projectsWithBids,
+        });
+    } catch (error) {
+        console.error("Error fetching under development projects:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// @desc    Get single under development project with bid details
+// @route   GET /api/projects/under-development/:id
+// @access  Private (Landlord)
+export const getUnderDevelopmentProjectById = async (req, res) => {
+    try {
+        const userId = req.user?._id || req.user?.id || req.user?.userId;
+        const projectId = req.params.id;
+
+        const project = await Project.findById(projectId)
+            .populate("owner", "name email")
+            .populate("selectedCompany", "name email")
+            .populate({
+                path: "bids",
+                match: { status: "accepted" },
+                populate: { path: "company", select: "name email" },
+            });
+
+        if (!project) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        // Verify the user is the project owner
+        if (project.owner._id.toString() !== userId.toString()) {
+            return res.status(403).json({ success: false, message: "Not authorized" });
+        }
+
+        const acceptedBid = project.bids.find((b) => b.status === "accepted");
+
+        res.status(200).json({
+            success: true,
+            data: {
+                _id: project._id,
+                projectId: project.projectId,
+                title: project.title,
+                description: project.description,
+                location: project.location,
+                address: project.address,
+                budget: project.budget,
+                status: project.status,
+                images: project.images,
+                acceptedBid: acceptedBid
+                    ? {
+                        _id: acceptedBid._id,
+                        amount: acceptedBid.amount,
+                        proposalText: acceptedBid.proposalText,
+                        estimatedDays: acceptedBid.estimatedDays,
+                        company: acceptedBid.company,
+                        createdAt: acceptedBid.createdAt,
+                    }
+                    : null,
+                selectedCompany: project.selectedCompany,
+                createdAt: project.createdAt,
+                updatedAt: project.updatedAt,
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching under development project:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// @desc    Get company's accepted development projects
+// @route   GET /api/projects/company-projects
+// @access  Private (Company)
+export const getCompanyDevelopmentProjects = async (req, res) => {
+    try {
+        const companyId = req.user?._id || req.user?.id || req.user?.userId;
+
+        // Find all accepted bids by this company
+        const acceptedBids = await Bid.find({
+            company: companyId,
+            status: "accepted",
+        })
+            .populate({
+                path: "project",
+                populate: [
+                    { path: "owner", select: "name email" },
+                    { path: "selectedCompany", select: "name email" },
+                ],
+            })
+            .sort({ updatedAt: -1 });
+
+        // Map to include project and bid info
+        const projects = acceptedBids
+            .filter((bid) => bid.project) // Filter out any null projects
+            .map((bid) => ({
+                _id: bid.project._id,
+                projectId: bid.project.projectId,
+                title: bid.project.title,
+                description: bid.project.description,
+                location: bid.project.location,
+                address: bid.project.address,
+                budget: bid.project.budget,
+                deadline: bid.project.deadline,
+                status: bid.project.status,
+                images: bid.project.images,
+                owner: bid.project.owner,
+                acceptedBid: {
+                    _id: bid._id,
+                    amount: bid.amount,
+                    proposalText: bid.proposalText,
+                    estimatedDays: bid.estimatedDays,
+                    createdAt: bid.createdAt,
+                },
+                updatedAt: bid.project.updatedAt,
+            }));
+
+        res.status(200).json({
+            success: true,
+            count: projects.length,
+            data: projects,
+        });
+    } catch (error) {
+        console.error("Error fetching company development projects:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// @desc    Get single company development project by ID
+// @route   GET /api/projects/company-projects/:id
+// @access  Private (Company)
+export const getCompanyProjectById = async (req, res) => {
+    try {
+        const companyId = req.user?._id || req.user?.id || req.user?.userId;
+        const projectId = req.params.id;
+
+        // Find the project
+        const project = await Project.findById(projectId)
+            .populate("owner", "name email")
+            .populate("selectedCompany", "name email");
+
+        if (!project) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        // Find the accepted bid by this company for this project
+        const acceptedBid = await Bid.findOne({
+            project: projectId,
+            company: companyId,
+            status: "accepted",
+        });
+
+        if (!acceptedBid) {
+            return res.status(403).json({
+                success: false,
+                message: "Not authorized - you don't have an accepted bid on this project",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                _id: project._id,
+                projectId: project.projectId,
+                title: project.title,
+                description: project.description,
+                location: project.location,
+                address: project.address,
+                budget: project.budget,
+                deadline: project.deadline,
+                status: project.status,
+                images: project.images,
+                owner: project.owner,
+                acceptedBid: {
+                    _id: acceptedBid._id,
+                    amount: acceptedBid.amount,
+                    proposalText: acceptedBid.proposalText,
+                    estimatedDays: acceptedBid.estimatedDays,
+                    createdAt: acceptedBid.createdAt,
+                },
+                createdAt: project.createdAt,
+                updatedAt: project.updatedAt,
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching company project:", error);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };

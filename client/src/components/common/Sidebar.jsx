@@ -12,6 +12,7 @@ import {
     FaBell,
     FaSearch,
     FaRocket,
+    FaHardHat,
 } from 'react-icons/fa';
 import { authService, messageService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -123,6 +124,12 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                             label="Add Property"
                             active={isRouteActive('/add-property')}
                             onClick={() => navigate('/add-property')}
+                        />
+                        <SidebarItem
+                            icon={<FaHardHat />}
+                            label="List for Development"
+                            active={isRouteActive('/list-for-development')}
+                            onClick={() => navigate('/list-for-development')}
                         />
                         <SidebarItem
                             icon={<FaRocket />}

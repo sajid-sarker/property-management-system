@@ -229,6 +229,22 @@ export const projectService = {
 
   // Get company's own bids
   getMyBids: () => api.get("/projects/my-bids"),
+
+  // Accept a bid on a project (landlord only)
+  acceptBid: (projectId, bidId) =>
+    api.patch(`/projects/${projectId}/bid/${bidId}/accept`),
+
+  // Get landlord's under development projects
+  getUnderDevelopment: () => api.get("/projects/under-development"),
+
+  // Get single under development project with bid details
+  getUnderDevelopmentById: (id) => api.get(`/projects/under-development/${id}`),
+
+  // Get company's accepted development projects
+  getCompanyProjects: () => api.get("/projects/company-projects"),
+
+  // Get single company development project by ID
+  getCompanyProjectById: (id) => api.get(`/projects/company-projects/${id}`),
 };
 
 // ============ WISHLIST SERVICE ============

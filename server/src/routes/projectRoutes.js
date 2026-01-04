@@ -9,7 +9,13 @@ import {
     withdrawBid,
     getProjectBids,
     getMyBids,
+    acceptBid,
+    getUnderDevelopmentProjects,
+    getUnderDevelopmentProjectById,
+    getCompanyDevelopmentProjects,
+    getCompanyProjectById,
 } from "../controllers/projectController.js";
+
 
 const router = express.Router();
 
@@ -22,6 +28,15 @@ const router = express.Router();
 // Get company's own bids (must be before /:id to avoid conflict)
 router.get("/my-bids", protect, getMyBids);
 
+// Landlord's under development projects
+router.get("/under-development", protect, getUnderDevelopmentProjects);
+router.get("/under-development/:id", protect, getUnderDevelopmentProjectById);
+
+// Company's accepted development projects
+router.get("/company-projects", protect, getCompanyDevelopmentProjects);
+router.get("/company-projects/:id", protect, getCompanyProjectById);
+
+
 // Public routes
 router.get("/", getAllProjects);
 router.get("/:id", getProjectById);
@@ -32,5 +47,7 @@ router.post("/", protect, createProject);
 router.post("/:id/bid", protect, placeBid);
 router.put("/:id/bid/:bidId", protect, updateBid); // Feature 3: Modify bid
 router.delete("/:id/bid/:bidId", protect, withdrawBid); // Feature 3: Withdraw bid
+router.patch("/:id/bid/:bidId/accept", protect, acceptBid); // Accept a bid (landlord only)
 
 export default router;
+
