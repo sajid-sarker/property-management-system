@@ -112,7 +112,7 @@ const Login = () => {
                 </form>
 
                 <div style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--color-text-light)', fontSize: '0.9rem' }}>
-                    Don't have an account? <Link to="/register" className="text-accent" style={{ fontWeight: 600 }}>Join the waiting list</Link>
+                    Don't have an account? <Link to="/register" className="text-accent" style={{ fontWeight: 600 }}>Register</Link>
                 </div>
             </motion.div>
         </div>

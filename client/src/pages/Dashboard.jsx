@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  FaUser,
-  FaHome,
-  FaHeart,
-  FaCog,
   FaSignOutAlt,
-  FaPlus,
   FaBuilding,
-  FaComments,
-  FaBell,
-  FaSearch,
-  FaRocket,
-  FaListAlt,
   FaCheck,
   FaHardHat,
 } from "react-icons/fa";
@@ -36,8 +26,6 @@ const Dashboard = () => {
   const [acceptedBids, setAcceptedBids] = useState(new Set());
   const [companyProjects, setCompanyProjects] = useState([]);
   const [companyProjectsLoading, setCompanyProjectsLoading] = useState(false);
-
-
 
   // Fetch dashboard stats on mount
   useEffect(() => {
@@ -65,13 +53,11 @@ const Dashboard = () => {
     }
   }, [searchParams]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (activeTab === "notifications") {
       const fetchNotifications = async () => {
         try {
-          console.log("Dashboard: fetching notifications...");
           const response = await notificationService.getUserNotifications();
-          console.log("Dashboard: fetched notifications:", response.data);
           setNotifications(response.data);
         } catch (error) {
           console.error("Failed to fetch notifications", error);
@@ -290,7 +276,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Recent Activity Section */}
         {/* Content Area */}
         <div
           style={{
@@ -327,7 +312,7 @@ const Dashboard = () => {
                     }}
                   >
                     <FaHardHat style={{ color: "var(--color-accent)" }} />
-                    Under Development Properties
+                    Properties Under Development
                   </h3>
 
                   {underDevLoading ? (
@@ -586,102 +571,9 @@ const Dashboard = () => {
             </>
           )}
 
-          {activeTab === "messages" && (
-            <>
-              <h3
-                style={{
-                  color: "white",
-                  marginBottom: "1.5rem",
-                  fontFamily: "var(--font-heading)",
-                }}
-              >
-                Messages
-              </h3>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                }}
-              >
-                <div
-                  style={{
-                    padding: "1rem",
-                    background: "rgba(0,0,0,0.2)",
-                    borderRadius: "8px",
-                    borderLeft: "3px solid var(--color-accent)",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>
-                      Sarah Jenkins (Admin)
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--color-text-light)",
-                      }}
-                    >
-                      2 mins ago
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      color: "var(--color-text-light)",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    Hi! I'm available for a viewing of the Penthouse tomorrow at
-                    2 PM.
-                  </p>
-                </div>
-                <div
-                  style={{
-                    padding: "1rem",
-                    background: "rgba(0,0,0,0.2)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>John Doe (Buyer)</span>
-                    <span
-                      style={{
-                        fontSize: "0.8rem",
-                        color: "var(--color-text-light)",
-                      }}
-                    >
-                      1 day ago
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      color: "var(--color-text-light)",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    Is the price negotiable for the Downtown Loft?
-                  </p>
-                </div>
-              </div>
-            </>
-          )}
-
           {/* Placeholder for other tabs */}
           {activeTab !== "overview" &&
-            activeTab !== "notifications" &&
-            activeTab !== "messages" && (
+            activeTab !== "notifications" && (
               <div
                 style={{
                   color: "var(--color-text-light)",
@@ -697,8 +589,6 @@ const Dashboard = () => {
     </div>
   );
 };
-
-
 
 const StatCard = ({ number, label }) => (
   <div
@@ -722,38 +612,5 @@ const StatCard = ({ number, label }) => (
     <div style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>{label}</div>
   </div>
 );
-
-const ActivityItem = ({ text, time, isHighlight, link }) => {
-  const content = (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        padding: "1rem",
-        background: "rgba(0,0,0,0.2)",
-        borderRadius: "8px",
-        borderLeft: isHighlight ? "3px solid var(--color-accent)" : "none",
-        cursor: link ? "pointer" : "default",
-        transition: "background 0.2s",
-      }}
-      className={link ? "hover:bg-black/40" : ""}
-    >
-      <div style={{ color: "var(--color-text-main)" }}>{text}</div>
-      <div style={{ color: "var(--color-text-light)", fontSize: "0.85rem" }}>
-        {time}
-      </div>
-    </div>
-  );
-
-  if (link) {
-    return (
-      <Link to={link} style={{ display: 'block', textDecoration: 'none' }}>
-        {content}
-      </Link>
-    );
-  }
-
-  return content;
-};
 
 export default Dashboard;

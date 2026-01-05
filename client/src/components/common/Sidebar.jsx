@@ -11,7 +11,6 @@ import {
     FaComments,
     FaBell,
     FaSearch,
-    FaRocket,
     FaHardHat,
 } from 'react-icons/fa';
 import { authService, messageService } from '../../services/api';
@@ -130,12 +129,6 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                             label="List for Development"
                             active={isRouteActive('/list-for-development')}
                             onClick={() => navigate('/list-for-development')}
-                        />
-                        <SidebarItem
-                            icon={<FaRocket />}
-                            label="Boosted Listings"
-                            active={activeTab === 'boosted'}
-                            onClick={() => handleNavigation('boosted')}
                         />
                     </>
                 )}
