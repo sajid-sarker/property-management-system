@@ -1,22 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
-import {
-  FaSearch,
-  FaArrowRight,
-  FaMapMarkerAlt,
-  FaBed,
-  FaBath,
-  FaRulerCombined,
-  FaStar,
-} from "react-icons/fa";
+import { FaStar } from "react-icons/fa";
 import { propertyService } from "../services/api";
-import { useAuth } from "../contexts/AuthContext";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
+import FeaturedCarousel from "../components/properties/FeaturedCarousel";
 
 const HomePage = () => {
-  const { user } = useAuth();
   const { scrollY } = useScroll();
   const yHero = useTransform(scrollY, [0, 500], [0, 200]);
   const [properties, setProperties] = useState([]);
@@ -65,7 +55,7 @@ const HomePage = () => {
             right: 0,
             bottom: 0,
             backgroundImage:
-              'url("https://images.unsplash.com/photo-1622372738946-a2e5330eef76?q=80&w=2574&auto=format&fit=crop")',
+              'url("https://unsplash.com/photos/curved-wooden-ceiling-with-warm-ambient-lighting-JS3BH31COQg")',
             backgroundSize: "cover",
             backgroundPosition: "center",
             filter: "brightness(0.4)",
@@ -158,55 +148,6 @@ const HomePage = () => {
         </motion.div>
       </section>
 
-      {/* Recommended for You (Logged In) */}
-      {user && (
-        <section
-          style={{
-            padding: "6rem 0 2rem 0",
-            background: "var(--color-primary)",
-          }}
-        >
-          <div className="container">
-            <h4
-              className="text-accent"
-              style={{
-                textTransform: "uppercase",
-                letterSpacing: "2px",
-                fontSize: "0.875rem",
-                marginBottom: "1rem",
-              }}
-            >
-              {user.role === "landlord"
-                ? "Market Insights"
-                : "Recommended For You"}
-            </h4>
-            <div
-              style={{
-                background: "var(--color-primary-light)",
-                padding: "2rem",
-                borderRadius: "8px",
-                border: "1px solid rgba(255,255,255,0.05)",
-              }}
-            >
-              <p style={{ color: "white" }}>
-                {/* MOCK DATA: This recommendation text is hardcoded based on role. Replace with dynamic AI-driven recommendations or stats. */}
-                {user.role === "renter" &&
-                  "Based on your search for 'Villas', check out these new listings in Beverly Hills."}
-                {user.role === "landlord" &&
-                  "Rental demand in New York has increased by 15% this week."}
-                {user.role === "company" &&
-                  "Your agency performance is in the top 10% this month."}
-                {user.role === "admin" &&
-                  "System health is optimal. No critical alerts."}
-                {!["renter", "landlord", "company", "admin"].includes(
-                  user.role
-                ) && "Welcome back! Check out the latest properties."}
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Featured Collection */}
       <section
         id="featured"
@@ -246,17 +187,7 @@ const HomePage = () => {
               Loading Collection...
             </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                gap: "2rem",
-              }}
-            >
-              {properties.map((prop, idx) => (
-                <PropertyCard key={prop._id || prop.id || idx} data={prop} index={idx} />
-              ))}
-            </div>
+            <FeaturedCarousel properties={properties} />
           )}
         </div>
       </section>
@@ -361,93 +292,6 @@ const HomePage = () => {
   );
 };
 
-// Sub-components
-const PropertyCard = ({ data, index }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay: index * 0.1 }}
-    whileHover={{ y: -10 }}
-    style={{
-      background: "var(--color-primary-light)",
-      borderRadius: "4px",
-      overflow: "hidden",
-      border: "1px solid rgba(255,255,255,0.05)",
-    }}
-  >
-    <div style={{ height: "200px", overflow: "hidden", position: "relative" }}>
-      <img
-        src={data.image}
-        alt={data.title}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          transition: "transform 0.7s ease",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
-          padding: "2rem 1.5rem 1rem 1.5rem",
-        }}
-      >
-        <div
-          style={{
-            color: "var(--color-accent)",
-            fontWeight: 600,
-            fontSize: "1.25rem",
-            marginBottom: "0.25rem",
-          }}
-        >
-          {data.price}
-        </div>
-        <h3 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>
-          {data.title}
-        </h3>
-      </div>
-    </div>
-    <div style={{ padding: "1rem" }}>
-      <p
-        style={{
-          color: "var(--color-text-light)",
-          marginBottom: "1.5rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem",
-          fontSize: "0.9rem",
-        }}
-      >
-        <FaMapMarkerAlt className="text-accent" /> {data.location}
-      </p>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          paddingTop: "1rem",
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-          color: "var(--color-text-main)",
-          fontSize: "0.9rem",
-        }}
-      >
-        <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <FaBed className="text-accent" /> {data.beds} Beds
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <FaBath className="text-accent" /> {data.baths} Baths
-        </span>
-        <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <FaRulerCombined className="text-accent" /> {data.sqft}
-        </span>
-      </div>
-    </div>
-  </motion.div>
-);
 
 const darkInputStyle = {
   width: "100%",
