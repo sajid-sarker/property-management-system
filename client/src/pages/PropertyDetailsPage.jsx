@@ -14,10 +14,12 @@ import {
   FaTrash,
   FaHeart,
   FaRegHeart,
+  FaRocket,
 } from "react-icons/fa";
 import ReviewSection from "../components/properties/ReviewSection";
 import BidHistorySection from "../components/properties/BidHistorySection";
 import ErrorBoundary from "../components/common/ErrorBoundary";
+import BoostPropertyModal from "../components/properties/BoostPropertyModal";
 import Navbar from "../components/common/Navbar";
 
 const PropertyDetailsPage = () => {
@@ -31,6 +33,7 @@ const PropertyDetailsPage = () => {
   const [submittingBid, setSubmittingBid] = useState(false);
   const [inWishlist, setInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [showBoostModal, setShowBoostModal] = useState(false);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -654,7 +657,43 @@ const PropertyDetailsPage = () => {
               </div>
             ) : (
               <div style={{ textAlign: "center", color: "var(--color-text-light)" }}>
-                <p>This is your property listing.</p>
+                <p style={{ marginBottom: "1rem" }}>This is your property listing.</p>
+                {property.priority > 1 ? (
+                  <div
+                    style={{
+                      padding: "1rem",
+                      background: "rgba(212, 175, 55, 0.1)",
+                      border: "1px solid rgba(212, 175, 55, 0.3)",
+                      borderRadius: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem",
+                      color: "#d4af37",
+                      fontWeight: "600",
+                    }}
+                  >
+                    <FaRocket /> Currently Boosted
+                  </div>
+                ) : (
+                  <button
+                    className="btn btn-primary"
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem",
+                      background: "linear-gradient(135deg, #d4af37, #c5a028)",
+                      color: "#0a0a0f",
+                      fontWeight: "bold",
+                      border: "none",
+                    }}
+                    onClick={() => setShowBoostModal(true)}
+                  >
+                    <FaRocket /> Boost Listing
+                  </button>
+                )}
               </div>
             )}
 
@@ -720,6 +759,22 @@ const PropertyDetailsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Boost Modal for Property Owners */}
+      <BoostPropertyModal
+        isOpen={showBoostModal}
+        onClose={() => setShowBoostModal(false)}
+        propertyId={property._id || id}
+        landlordId={userId}
+        onBoostComplete={(boostData) => {
+          setShowBoostModal(false);
+          // Optionally refresh the property data
+          propertyService.getById(id).then(res => {
+            const data = res.data?.data || res.data;
+            if (data) setProperty(data);
+          });
+        }}
+      />
     </div>
   );
 };
