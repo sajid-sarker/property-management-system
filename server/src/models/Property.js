@@ -68,7 +68,7 @@ const propertySchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["available", "sold", "rented", "pending", "bidding"],
+      enum: ["available", "unavailable"],
       default: "available",
     },
     

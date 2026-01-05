@@ -25,14 +25,14 @@ const Properties = () => {
     const [properties, setProperties] = useState([]);
     const [myListings, setMyListings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filterType, setFilterType] = useState('all'); // Renamed from filter to filterType to avoid confusion
+    // Removed redundant filterType - now using listingType for both UI and API
 
     // New Filter State
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [location, setLocation] = useState('');
     const [minRating, setMinRating] = useState('');
-    const [status, setStatus] = useState('available'); // Default to 'available' for buyers
+    const [status, setStatus] = useState(''); // Default to showing all statuses
     const [listingType, setListingType] = useState(''); // Sale or Rent filter
     const [boostedOnly, setBoostedOnly] = useState(false); // Filter for boosted properties only
 
@@ -62,7 +62,6 @@ const Properties = () => {
                 setProperties(Array.isArray(data) ? data : []);
             }
         } catch (error) {
-            console.error('Failed to fetch properties', error);
             setProperties([]);
         } finally {
             setLoading(false);
@@ -78,68 +77,36 @@ const Properties = () => {
     useEffect(() => {
       // Raiyan changes start here
         fetchProperties();
-    }, [showMyListings, user]); // Re-fetch when showMyListings or user changes
+    }, [showMyListings, user, listingType]); // Re-fetch when listing type changes (filter buttons)
 
     const handleApplyFilters = () => {
         fetchProperties();
     };
 
-    // Filter properties based on selection
-    // Client-side filtering for Type (Sale/Rent) and Boosted
+    // Client-side filtering
+    // - For My Properties: filter by listingType (backend doesn't support it for getMyListings)
+    // - For all views: filter by boosted status
     const filteredProperties = properties.filter((p) => {
-        const propListingType = (p.listingType || '').toLowerCase();
-        if (filterType === 'sell' && propListingType !== 'sell') return false;
-        if (filterType === 'rent' && propListingType !== 'rent') return false;
+        // Filter by listing type if a filter is selected
+        if (listingType) {
+            const propListingType = (p.listingType || '').toLowerCase();
+            if (propListingType !== listingType.toLowerCase()) return false;
+        }
+        
+        // Filter by boosted status
         if (boostedOnly && (p.priority || 1) <= 1) return false;
+        
         return true;
     });
-  // Raiyan changes end here
-  
-//         const fetchProperties = async () => {
-//             try {
-//                 const response = await propertyService.getAll();
-//                 // Handle both { success: true, data: [...] } and direct array responses
-//                 const data = response.data?.data || response.data || [];
-//                 setProperties(Array.isArray(data) ? data : []);
-
-//                 // Fetch my listings if user is landlord
-//                 if (isLandlord) {
-//                     try {
-//                         const myResponse = await propertyService.getMyListings();
-//                         const myData = myResponse.data?.data || myResponse.data || [];
-//                         setMyListings(Array.isArray(myData) ? myData : []);
-//                     } catch (err) {
-//                         console.error('Failed to fetch my listings', err);
-//                     }
-//                 }
-//             } catch (error) {
-//                 console.error('Failed to fetch properties', error);
-//                 setProperties([]);
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-//         fetchProperties();
-//     }, [isLandlord]);
-
-//     // Filter properties based on selection
-//     const filteredProperties = filter === 'my-listings'
-//         ? myListings
-//         : properties.filter((p) => {
-//             if (filter === 'all') return true;
-//             const listingType = p.listingType || (p.isForSale ? 'sell' : 'rent');
-//             if (filter === 'sell') return listingType === 'sell';
-//             if (filter === 'rent') return listingType === 'rent';
-//             return true;
-//         });
 
     return (
        <Box display="flex" bg="#0a0a0f" minH="100vh">
-            {/* Sidebar Navigation */}
-            <Sidebar />
+            {/* Sidebar Navigation - Only show for owner's dashboard */}
+            <Navbar variant="fixed"/>
+            {showMyListings && <Sidebar />}
 
             {/* Main Content */}
-            <Box flex="1" p="8" color="white" overflowY="auto">
+            <Box flex="1" px="8" pb="8" pt="100px" color="white" overflowY="auto">
                 {/* Page Header */}
                 <Flex
                     justify="space-between"
@@ -178,20 +145,20 @@ const Properties = () => {
                         flexWrap="wrap"
                     >
                         <FilterButton
-                            active={filterType === 'all'}
-                            onClick={() => setFilterType('all')}
+                            active={listingType === ''}
+                            onClick={() => setListingType('')}
                         >
                             All
                         </FilterButton>
                         <FilterButton
-                            active={filterType === 'sell'}
-                            onClick={() => setFilterType('sell')}
+                            active={listingType === 'sell'}
+                            onClick={() => setListingType('sell')}
                         >
                             For Sale
                         </FilterButton>
                         <FilterButton
-                            active={filterType === 'rent'}
-                            onClick={() => setFilterType('rent')}
+                            active={listingType === 'rent'}
+                            onClick={() => setListingType('rent')}
                         >
                             For Rent
                         </FilterButton>
@@ -297,11 +264,9 @@ const Properties = () => {
                                 }}
                                 _focus={{ boxShadow: '0 0 0 1px #d4af37', outline: "none" }}
                             >
+
                                 <option value="available" style={{ background: '#0a0a0f', color: 'white' }}>Available</option>
-                                <option value="sold" style={{ background: '#0a0a0f', color: 'white' }}>Sold</option>
-                                <option value="rented" style={{ background: '#0a0a0f', color: 'white' }}>Rented</option>
-                                <option value="pending" style={{ background: '#0a0a0f', color: 'white' }}>Pending</option>
-                                <option value="all" style={{ background: '#0a0a0f', color: 'white' }}>All Statuses</option>
+                                <option value="unavailable" style={{ background: '#0a0a0f', color: 'white' }}>Unavailable</option>
                             </Box>
                         </Box>
                         <Box>

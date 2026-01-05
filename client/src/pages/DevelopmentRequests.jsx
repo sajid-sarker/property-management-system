@@ -6,6 +6,7 @@ import { projectService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Modal from '../components/common/Modal';
 import Button from '../components/common/Button';
+import Navbar from '../components/common/Navbar';
 
 /**
  * DevelopmentRequests Page
@@ -196,6 +197,7 @@ const DevelopmentRequests = () => {
             paddingBottom: '4rem',
             color: 'white'
         }}>
+            <Navbar variant="fixed" />
             <div className="container">
                 {/* Page Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>

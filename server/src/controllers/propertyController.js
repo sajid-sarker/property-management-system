@@ -151,10 +151,7 @@ export const createProperty = async (req, res) => {
     property.isBiddable = false;
   }
 
-  // If isBiddable is true, set status to 'bidding'
-  if (property.isBiddable && listingType === "sell") {
-    property.status = "bidding";
-  }
+  // Note: Status remains 'available' by default. Use isBiddable flag for bidding properties.
 
   const newProperty = new Property(property);
 
@@ -246,12 +243,7 @@ export const updateProperty = async (req, res) => {
       });
     }
 
-    // Update bidding status
-    if (propertyData.isBiddable === true && existingProperty.listingType === "sell") {
-      propertyData.status = "bidding";
-    } else if (propertyData.isBiddable === false && existingProperty.status === "bidding") {
-      propertyData.status = "available";
-    }
+    // Note: Status can only be 'available' or 'unavailable'. isBiddable is a separate flag.
 
     // Detect price changes and notify wishlist users
     let oldPrice = null;
