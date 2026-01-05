@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { FaUpload } from "react-icons/fa";
+import { FaUpload, FaTimes } from "react-icons/fa";
 import { authService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import Sidebar from "../components/common/Sidebar";
@@ -165,6 +165,9 @@ const ProfilePage = () => {
       localStorage.setItem("user", JSON.stringify(updatedUser));
       
       alert("Profile Updated Successfully!");
+      
+      // Navigate back to dashboard
+      navigate("/dashboard");
     } catch (error) {
       console.error("Failed to update profile", error);
       alert("Failed to update profile. " + (error.response?.data?.message || ""));
@@ -248,11 +251,40 @@ const ProfilePage = () => {
           <div
             style={{
               marginBottom: "2rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
             <h1 style={{ fontSize: "2.5rem", fontFamily: "var(--font-heading)" }}>
               Edit Profile
             </h1>
+            <button
+              onClick={() => navigate(`/dashboard/`)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--color-text-light)",
+                cursor: "pointer",
+                padding: "0.5rem",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = "var(--color-accent)";
+                e.target.style.background = "rgba(255,255,255,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = "var(--color-text-light)";
+                e.target.style.background = "transparent";
+              }}
+              title="Close"
+            >
+              <FaTimes size={24} />
+            </button>
           </div>
 
           <div

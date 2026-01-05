@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import Sidebar from '../components/common/Sidebar';
 import DevRequestForm from '../components/properties/DevRequestForm';
 
 /**
@@ -56,41 +57,37 @@ const ListForDevelopmentPage = () => {
     };
 
     return (
-        <Box bg="#0a0a0f" minH="100vh" color="white">
-            <Navbar variant="solid" />
+        <Box display="flex" bg="#0a0a0f" minH="100vh">
+            {/* Sidebar Navigation */}
+            <Sidebar />
 
-            <Box
-                maxW="800px"
-                mx="auto"
-                px="6"
-                pt="32"
-                pb="16"
-            >
-                {/* Page Header */}
-                <VStack mb="10" textAlign="center">
-                    <Heading
-                        fontFamily="'Playfair Display', serif"
-                        fontSize={{ base: '2rem', md: '2.5rem' }}
-                        fontWeight="600"
-                    >
-                        List for <Text as="span" color="#d4af37">Development</Text>
-                    </Heading>
-                    <Text color="#a0a0a0" fontSize="lg">
-                        Submit your property for development opportunities.
-                    </Text>
-                </VStack>
+            {/* Main Content */}
+            <Box flex="1" p="8" color="white" overflowY="auto">
+                <Box maxW="800px" mx="auto">
+                    {/* Page Header */}
+                    <VStack mb="10" textAlign="center">
+                        <Heading
+                            fontFamily="'Playfair Display', serif"
+                            fontSize={{ base: '2rem', md: '2.5rem' }}
+                            fontWeight="600"
+                        >
+                            List for <Text as="span" color="#d4af37">Development</Text>
+                        </Heading>
+                        <Text color="#a0a0a0" fontSize="lg">
+                            Submit your property for development opportunities.
+                        </Text>
+                    </VStack>
 
-                {/* Development Request Form */}
-                <DevRequestForm
-                    onSubmit={handleSubmit}
-                    isLoading={isSubmitting}
-                    showBoostOption={true}
-                    wantsBoost={wantsBoost}
-                    onBoostChange={setWantsBoost}
-                />
+                    {/* Development Request Form */}
+                    <DevRequestForm
+                        onSubmit={handleSubmit}
+                        isLoading={isSubmitting}
+                        showBoostOption={true}
+                        wantsBoost={wantsBoost}
+                        onBoostChange={setWantsBoost}
+                    />
+                </Box>
             </Box>
-
-            <Footer />
         </Box>
     );
 };

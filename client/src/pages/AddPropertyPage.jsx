@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 // Import reusable components from common and properties folders
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import Sidebar from '../components/common/Sidebar';
 import PropertyForm from '../components/properties/PropertyForm';
 import BoostPropertyModal from '../components/properties/BoostPropertyModal';
 
@@ -73,40 +74,36 @@ const AddPropertyPage = () => {
     };
 
     return (
-        <Box bg="#0a0a0f" minH="100vh" color="white">
-            {/* Reusable Navbar Component */}
-            <Navbar variant="solid" />
+        <Box display="flex" bg="#0a0a0f" minH="100vh">
+            {/* Sidebar Navigation */}
+            <Sidebar />
 
-            {/* Page Content */}
-            <Box
-                maxW="800px"
-                mx="auto"
-                px="6"
-                pt="32"
-                pb="16"
-            >
-                {/* Page Header */}
-                <VStack mb="10" textAlign="center">
-                    <Heading
-                        fontFamily="'Playfair Display', serif"
-                        fontSize={{ base: '2rem', md: '2.5rem' }}
-                        fontWeight="600"
-                    >
-                        List Your <Text as="span" color="#d4af37">Property</Text>
-                    </Heading>
-                    <Text color="#a0a0a0" fontSize="lg">
-                        Join our exclusive collection of premium residences.
-                    </Text>
-                </VStack>
+            {/* Main Content */}
+            <Box flex="1" p="8" color="white" overflowY="auto">
+                <Box maxW="800px" mx="auto">
+                    {/* Page Header */}
+                    <VStack mb="10" textAlign="center">
+                        <Heading
+                            fontFamily="'Playfair Display', serif"
+                            fontSize={{ base: '2rem', md: '2.5rem' }}
+                            fontWeight="600"
+                        >
+                            List Your <Text as="span" color="#d4af37">Property</Text>
+                        </Heading>
+                        <Text color="#a0a0a0" fontSize="lg">
+                            Join our exclusive collection of premium residences.
+                        </Text>
+                    </VStack>
 
-                {/* Reusable Property Form Component */}
-                <PropertyForm
-                    onSubmit={handleSubmit}
-                    isLoading={isSubmitting}
-                    showBoostOption={true}
-                    wantsBoost={wantsBoost}
-                    onBoostChange={setWantsBoost}
-                />
+                    {/* Reusable Property Form Component */}
+                    <PropertyForm
+                        onSubmit={handleSubmit}
+                        isLoading={isSubmitting}
+                        showBoostOption={true}
+                        wantsBoost={wantsBoost}
+                        onBoostChange={setWantsBoost}
+                    />
+                </Box>
             </Box>
 
             {/* Boost Modal */}
@@ -117,9 +114,6 @@ const AddPropertyPage = () => {
                 propertyId={createdPropertyId}
                 landlordId={user?._id || user?.id}
             />
-
-            {/* Reusable Footer Component */}
-            <Footer />
         </Box>
     );
 };

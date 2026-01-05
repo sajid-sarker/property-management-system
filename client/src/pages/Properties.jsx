@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 // Import reusable components
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import Sidebar from '../components/common/Sidebar';
 import Button from '../components/common/Button';
 import PropertyCard from '../components/properties/PropertyCard';
 
@@ -133,12 +134,12 @@ const Properties = () => {
 //         });
 
     return (
-        <Box bg="#0a0a0f" minH="100vh" color="white">
-            {/* Reusable Navbar Component */}
-            <Navbar variant="solid" />
+       <Box display="flex" bg="#0a0a0f" minH="100vh">
+            {/* Sidebar Navigation */}
+            <Sidebar />
 
             {/* Main Content */}
-            <Box className="container" pt="32" pb="16" px="6" maxW="1400px" mx="auto">
+            <Box flex="1" p="8" color="white" overflowY="auto">
                 {/* Page Header */}
                 <Flex
                     justify="space-between"
@@ -389,8 +390,6 @@ const Properties = () => {
                 )}
             </Box>
 
-            {/* Reusable Footer Component */}
-            <Footer />
         </Box>
     );
 };
