@@ -16,7 +16,7 @@ import WishlistPage from "./pages/WishlistPage.jsx";
 import DevelopmentRequests from "./pages/DevelopmentRequests.jsx";
 import AddPropertyPage from "./pages/AddPropertyPage.jsx";
 import ListForDevelopmentPage from "./pages/ListForDevelopmentPage.jsx";
-import SearchPage from "./pages/SearchPage.jsx";
+
 import MessagesPage from "./pages/MessagesPage.jsx";
 import UnderDevelopmentDetail from "./pages/UnderDevelopmentDetail.jsx";
 import CompanyProjectDetail from "./pages/CompanyProjectDetail.jsx";
@@ -30,7 +30,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/search" element={<SearchPage />} />
+
         <Route path="/properties" element={<Properties />} />
         <Route path="/properties-list" element={<PropertyListPage />} />
         <Route path="/properties/:id" element={<PropertyDetailsPage />} />

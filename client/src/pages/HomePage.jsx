@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { FaStar } from "react-icons/fa";
+import { FaStar, FaSearch } from "react-icons/fa";
 import { propertyService } from "../services/api";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
@@ -117,33 +118,49 @@ const HomePage = () => {
             </span>
           </h1>
 
-          {/* Luxury Search Bar */}
+          {/* Luxury Call to Action */}
           <motion.div
-            className="search-container"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8 }}
             style={{
-              background: "rgba(255,255,255,0.05)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              padding: "0.75rem",
-              borderRadius: "8px",
-              display: "flex",
-              gap: "0.5rem",
               maxWidth: "800px",
               margin: "0 auto",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
             }}
           >
-            <input
-              type="text"
-              placeholder="Search by location, property type..."
-              style={darkInputStyle}
-            />
-            <button className="btn btn-primary" style={{ minWidth: "120px" }}>
-              Search
-            </button>
+            <Link to="/properties" style={{ textDecoration: "none" }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ 
+                  width: "100%",
+                  maxWidth: "400px",
+                  padding: "1rem 2.5rem",
+                  fontSize: "1.1rem",
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.75rem",
+                  margin: "0 auto",
+                  background: "linear-gradient(135deg, var(--color-accent), #b8963d)",
+                  border: "none",
+                  borderRadius: "8px",
+                  boxShadow: "0 25px 50px -12px rgba(212, 175, 55, 0.3)",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = "translateY(-2px)";
+                  e.target.style.boxShadow = "0 30px 60px -12px rgba(212, 175, 55, 0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = "translateY(0)";
+                  e.target.style.boxShadow = "0 25px 50px -12px rgba(212, 175, 55, 0.3)";
+                }}
+              >
+                <FaSearch />
+                Search Properties
+              </button>
+            </Link>
           </motion.div>
         </motion.div>
       </section>
@@ -179,7 +196,9 @@ const HomePage = () => {
                 Featured Residences
               </h2>
             </div>
-            <button className="btn btn-outline">View All Listings</button>
+            <Link to="/properties">
+              <button className="btn btn-outline">View All Listings</button>
+            </Link>
           </div>
 
           {loading ? (

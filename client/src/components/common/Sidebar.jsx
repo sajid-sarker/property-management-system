@@ -10,7 +10,6 @@ import {
     FaBuilding,
     FaComments,
     FaBell,
-    FaSearch,
     FaHardHat,
 } from 'react-icons/fa';
 import { authService, messageService } from '../../services/api';
@@ -90,12 +89,6 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
             <nav
                 style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}
             >
-                <SidebarItem
-                    icon={<FaSearch />}
-                    label="Search"
-                    active={isRouteActive('/search')}
-                    onClick={() => navigate('/search')}
-                />
 
                 <SidebarItem
                     icon={<FaUser />}
