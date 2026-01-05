@@ -269,47 +269,50 @@ const Properties = () => {
                                 <option value="unavailable" style={{ background: '#0a0a0f', color: 'white' }}>Unavailable</option>
                             </Box>
                         </Box>
-                        <Box>
-                            <Text mb="2" fontSize="sm" color="#a0a0a0">Boosted</Text>
-                            <Box
-                                as="button"
-                                onClick={() => setBoostedOnly(!boostedOnly)}
-                                display="flex"
-                                alignItems="center"
-                                gap="3"
-                                bg={boostedOnly ? "rgba(212, 175, 55, 0.15)" : "#0a0a0f"}
-                                border={boostedOnly ? "1px solid #d4af37" : "1px solid rgba(255, 255, 255, 0.1)"}
-                                color={boostedOnly ? "#d4af37" : "white"}
-                                p="2"
-                                pl="4"
-                                borderRadius="md"
-                                width="100%"
-                                cursor="pointer"
-                                transition="all 0.2s ease"
-                                _hover={{ borderColor: '#d4af37' }}
-                            >
+                        {/* Boosted Toggle - Only show for property owners viewing their own listings */}
+                        {showMyListings && (
+                            <Box>
+                                <Text mb="2" fontSize="sm" color="#a0a0a0">Boosted</Text>
                                 <Box
-                                    w="36px"
-                                    h="20px"
-                                    bg={boostedOnly ? "#d4af37" : "rgba(255, 255, 255, 0.2)"}
-                                    borderRadius="full"
-                                    position="relative"
+                                    as="button"
+                                    onClick={() => setBoostedOnly(!boostedOnly)}
+                                    display="flex"
+                                    alignItems="center"
+                                    gap="3"
+                                    bg={boostedOnly ? "rgba(212, 175, 55, 0.15)" : "#0a0a0f"}
+                                    border={boostedOnly ? "1px solid #d4af37" : "1px solid rgba(255, 255, 255, 0.1)"}
+                                    color={boostedOnly ? "#d4af37" : "white"}
+                                    p="2"
+                                    pl="4"
+                                    borderRadius="md"
+                                    width="100%"
+                                    cursor="pointer"
                                     transition="all 0.2s ease"
+                                    _hover={{ borderColor: '#d4af37' }}
                                 >
                                     <Box
-                                        position="absolute"
-                                        top="2px"
-                                        left={boostedOnly ? "18px" : "2px"}
-                                        w="16px"
-                                        h="16px"
-                                        bg={boostedOnly ? "#0a0a0f" : "white"}
+                                        w="36px"
+                                        h="20px"
+                                        bg={boostedOnly ? "#d4af37" : "rgba(255, 255, 255, 0.2)"}
                                         borderRadius="full"
+                                        position="relative"
                                         transition="all 0.2s ease"
-                                    />
+                                    >
+                                        <Box
+                                            position="absolute"
+                                            top="2px"
+                                            left={boostedOnly ? "18px" : "2px"}
+                                            w="16px"
+                                            h="16px"
+                                            bg={boostedOnly ? "#0a0a0f" : "white"}
+                                            borderRadius="full"
+                                            transition="all 0.2s ease"
+                                        />
+                                    </Box>
+                                    <Text fontSize="sm">{boostedOnly ? "On" : "Off"}</Text>
                                 </Box>
-                                <Text fontSize="sm">{boostedOnly ? "On" : "Off"}</Text>
                             </Box>
-                        </Box>
+                        )}
                         <Box>
                             <Button
                                 variant="primary"

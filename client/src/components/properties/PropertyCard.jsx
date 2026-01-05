@@ -128,10 +128,10 @@ const PropertyCard = ({ data, index = 0 }) => {
                             _hover={{ transform: 'scale(1.05)' }}
                         />
 
-                        {/* Type Badge - Moved down slightly if needed, or kept same */}
+                        {/* Type Badge - Positioned in bottom right corner */}
                         <Badge
                             position="absolute"
-                            top="50px" // Moved down to avoid overlap with Featured badge if both exist
+                            bottom="4"
                             right="4"
                             background="rgba(212, 175, 55, 0.9)"
                             color="#0a0a0f"

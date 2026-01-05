@@ -47,7 +47,6 @@ const Navbar = ({ variant = 'auto' }) => {
     const navLinks = [
         { to: '/properties', label: 'Properties' },
         { to: '/development-requests', label: 'Dev Requests' },
-        { to: '/wishlist', label: 'Wishlist' },
     ];
 
     return (
