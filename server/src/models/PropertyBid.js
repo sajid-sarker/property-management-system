@@ -50,7 +50,7 @@ propertyBidSchema.index({ bidder: 1, status: 1 });
 propertyBidSchema.plugin(autoIncrement, {
     model: "PropertyBid",
     field: "bidId",
-    prefix: "BID-",
+    prefix: "PBID-",
     padLength: 6,
 });
 
