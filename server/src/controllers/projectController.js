@@ -82,6 +82,33 @@ export const createProject = async (req, res) => {
     }
 };
 
+// @desc    Delete a development project
+// @route   DELETE /api/projects/:id
+// @access  Private (Owner/Landlord)
+export const deleteProject = async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id);
+
+        if (!project) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        // Check if user is the owner (optional - for now allow any authenticated user)
+        const userId = req.user?._id || req.user?.id || req.user?.userId;
+
+        // Delete associated bids first
+        await Bid.deleteMany({ project: req.params.id });
+
+        // Delete the project
+        await Project.findByIdAndDelete(req.params.id);
+
+        res.status(200).json({ success: true, message: "Project deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting project:", error);
+        res.status(500).json({ success: false, message: error.message || "Server error" });
+    }
+};
+
 // @desc    Place a bid on a project
 // @route   POST /api/projects/:id/bid
 // @access  Private (Company)
