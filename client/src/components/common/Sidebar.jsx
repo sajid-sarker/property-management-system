@@ -4,7 +4,7 @@ import {
     FaUser,
     FaHome,
     FaHeart,
-    FaCog,
+
     FaSignOutAlt,
     FaPlus,
     FaBuilding,
@@ -171,18 +171,7 @@ const Sidebar = ({ activeTab = 'overview', onTabChange }) => {
                         }
                     }}
                 />
-                <SidebarItem
-                    icon={<FaCog />}
-                    label="Settings"
-                    active={activeTab === 'settings'}
-                    onClick={() => {
-                        if (onTabChange) {
-                            onTabChange('settings');
-                        } else {
-                            navigate('/dashboard?tab=settings');
-                        }
-                    }}
-                />
+
             </nav>
         </aside>
     );
