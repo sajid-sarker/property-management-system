@@ -28,8 +28,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Body parser
-app.use(express.json());
+// Body parser with increased limit for base64 images
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Static files for uploads
 const __dirname = path.resolve();
@@ -41,7 +42,6 @@ app.use("/api/properties", propertyRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/boosts", boostRoutes);
 app.use("/api/wishlist", wishlistRoutes);
-// app.use("/api", bidRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/property-bids", propertyBidRoutes);
 app.use("/api/messages", messageRoutes);

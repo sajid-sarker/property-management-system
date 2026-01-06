@@ -74,11 +74,10 @@ const PropertyForm = ({
 
         try {
             const response = await uploadService.uploadImage(file);
-            const imagePath = response.data?.data || response.data;
+            const imageData = response.data?.data || response.data;
             
-            // Construct full URL for the image
-            const imageUrl = `http://localhost:5000${imagePath}`;
-            setFormData((prev) => ({ ...prev, image: imageUrl }));
+            // Response is now a complete base64 data URL
+            setFormData((prev) => ({ ...prev, image: imageData }));
         } catch (error) {
             console.error('Failed to upload image:', error);
             setUploadError('Failed to upload image. Please try again.');

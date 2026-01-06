@@ -3,13 +3,14 @@ export const uploadFile = (req, res) => {
     return res.status(400).json({ success: false, message: "No file uploaded" });
   }
 
-  // Return the path to the file (relative to the server root / static serve path)
-  // We will serve 'uploads' folder at '/uploads' route.
-  const filePath = `/uploads/${req.file.filename}`;
+  // Convert buffer to base64 data URL for MongoDB storage
+  const base64 = req.file.buffer.toString('base64');
+  const mimeType = req.file.mimetype;
+  const dataUrl = `data:${mimeType};base64,${base64}`;
 
   res.status(200).json({
     success: true,
-    data: filePath,
+    data: dataUrl,
     message: "File uploaded successfully",
   });
 };

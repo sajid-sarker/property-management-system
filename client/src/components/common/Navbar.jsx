@@ -46,7 +46,7 @@ const Navbar = ({ variant = 'auto' }) => {
 
     const navLinks = [
         { to: '/properties', label: 'Properties' },
-        { to: '/development-requests', label: 'Dev Requests' },
+        { to: '/development-requests', label: 'Projects' },
     ];
 
     return (

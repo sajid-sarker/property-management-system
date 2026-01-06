@@ -1,24 +1,8 @@
 import multer from "multer";
 import path from "path";
-import fs from "fs";
 
-// Ensure uploads directory exists
-const uploadDir = "uploads";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename: timestamp-random-originalName
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
+// Use memory storage - files stay in memory as buffers for base64 conversion
+const storage = multer.memoryStorage();
 
 // File filter (images only)
 const fileFilter = (req, file, cb) => {
