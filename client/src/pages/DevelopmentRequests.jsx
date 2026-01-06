@@ -55,11 +55,8 @@ const DevelopmentRequests = () => {
             setRequests(openProjects);
         } catch (error) {
             console.error("Failed to fetch projects", error);
-            // Fallback to sample data if API fails
-            setRequests([
-                { _id: '1', title: 'Luxury High-Rise Complex', location: 'Dhaka, Gulshan 2', budget: 50000000, deadline: '2026-12-31', status: 'Open' },
-                { _id: '2', title: 'Eco-Friendly Resort', location: "Cox's Bazar, Marine Drive", budget: 25000000, deadline: '2026-11-15', status: 'Open' },
-            ]);
+            // Show empty list if API fails (no placeholder data)
+            setRequests([]);
         } finally {
             setLoading(false);
         }
@@ -230,106 +227,129 @@ const DevelopmentRequests = () => {
                                         background: 'var(--color-primary-light)',
                                         border: '1px solid rgba(255,255,255,0.05)',
                                         borderRadius: '12px',
-                                        padding: '2rem',
+                                        overflow: 'hidden',
                                     }}
                                 >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                                        {/* Project Info */}
-                                        <div style={{ flex: 1, minWidth: '300px' }}>
-                                            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--color-accent)' }}>
-                                                {request.title || 'Untitled Project'}
-                                            </h3>
-                                            <div style={{ display: 'flex', gap: '2rem', color: 'var(--color-text-light)', fontSize: '0.9rem', flexWrap: 'wrap' }}>
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                    <FaMapMarkerAlt /> {request.location || request.address?.city || 'Location TBD'}
-                                                </span>
-                                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                    <FaClock /> Deadline: {formatDate(request.deadline)}
-                                                </span>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                                        {/* Project Image */}
+                                        {(request.images?.length > 0 || request.image) && (
+                                            <div style={{
+                                                width: '250px',
+                                                minHeight: '180px',
+                                                flexShrink: 0,
+                                            }}>
+                                                <img
+                                                    src={request.images?.[0] || request.image}
+                                                    alt={request.title || 'Project'}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover',
+                                                    }}
+                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                />
                                             </div>
-                                            <div style={{ marginTop: '1rem' }}>
-                                                <span style={{ fontWeight: 600, color: '#d4af37' }}>
-                                                    <FaDollarSign style={{ marginRight: '0.25rem' }} />
-                                                    Budget: {formatBudget(request.budget)}
-                                                </span>
-                                            </div>
+                                        )}
 
-                                            {/* My Bid Status */}
-                                            {myBid && (
-                                                <div style={{
-                                                    marginTop: '1rem',
-                                                    padding: '0.75rem 1rem',
-                                                    background: 'rgba(212, 175, 55, 0.1)',
-                                                    borderRadius: '8px',
-                                                    border: '1px solid rgba(212, 175, 55, 0.3)',
-                                                }}>
-                                                    <div style={{ fontSize: '0.85rem', color: '#d4af37' }}>
-                                                        <FaCheck style={{ marginRight: '0.5rem' }} />
-                                                        Your Bid: {formatBudget(myBid.amount)} | Status: {myBid.status}
-                                                    </div>
+                                        {/* Project Content */}
+                                        <div style={{ flex: 1, padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                                            {/* Project Info */}
+                                            <div style={{ flex: 1, minWidth: '300px' }}>
+                                                <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--color-accent)' }}>
+                                                    {request.title || 'Untitled Project'}
+                                                </h3>
+                                                <div style={{ display: 'flex', gap: '2rem', color: 'var(--color-text-light)', fontSize: '0.9rem', flexWrap: 'wrap' }}>
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <FaMapMarkerAlt /> {request.location || request.address?.city || 'Location TBD'}
+                                                    </span>
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <FaClock /> Deadline: {formatDate(request.deadline)}
+                                                    </span>
                                                 </div>
-                                            )}
-                                        </div>
+                                                <div style={{ marginTop: '1rem' }}>
+                                                    <span style={{ fontWeight: 600, color: '#d4af37' }}>
+                                                        <FaDollarSign style={{ marginRight: '0.25rem' }} />
+                                                        Budget: {formatBudget(request.budget)}
+                                                    </span>
+                                                </div>
 
-                                        {/* Action Buttons */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '150px' }}>
-                                            {/* Feature 4: View Other Bids */}
-                                            <button
-                                                className="btn btn-outline"
-                                                onClick={() => handleViewBids(request)}
-                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                                            >
-                                                <FaEye /> View Bids
-                                            </button>
+                                                {/* My Bid Status */}
+                                                {myBid && (
+                                                    <div style={{
+                                                        marginTop: '1rem',
+                                                        padding: '0.75rem 1rem',
+                                                        background: 'rgba(212, 175, 55, 0.1)',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                                                    }}>
+                                                        <div style={{ fontSize: '0.85rem', color: '#d4af37' }}>
+                                                            <FaCheck style={{ marginRight: '0.5rem' }} />
+                                                            Your Bid: {formatBudget(myBid.amount)} | Status: {myBid.status}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
 
-                                            {/* Bid Actions */}
-                                            {!deadlinePassed && user?.role === 'company' && (
-                                                <>
-                                                    {myBid ? (
-                                                        <>
-                                                            {/* Feature 3: Edit Bid */}
+                                            {/* Action Buttons */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '150px' }}>
+                                                {/* Feature 4: View Other Bids */}
+                                                <button
+                                                    className="btn btn-outline"
+                                                    onClick={() => handleViewBids(request)}
+                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                                                >
+                                                    <FaEye /> View Bids
+                                                </button>
+
+                                                {/* Bid Actions */}
+                                                {!deadlinePassed && user?.role === 'company' && (
+                                                    <>
+                                                        {myBid ? (
+                                                            <>
+                                                                {/* Feature 3: Edit Bid */}
+                                                                <button
+                                                                    className="btn btn-primary"
+                                                                    onClick={() => openBidModal(request, myBid)}
+                                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                                                                >
+                                                                    <FaEdit /> Edit Bid
+                                                                </button>
+                                                                {/* Feature 3: Withdraw Bid */}
+                                                                <button
+                                                                    className="btn btn-outline"
+                                                                    onClick={() => handleWithdrawBid(request, myBid)}
+                                                                    style={{
+                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                                                        borderColor: '#dc3545', color: '#dc3545'
+                                                                    }}
+                                                                >
+                                                                    <FaTimes /> Withdraw
+                                                                </button>
+                                                            </>
+                                                        ) : (
                                                             <button
                                                                 className="btn btn-primary"
-                                                                onClick={() => openBidModal(request, myBid)}
-                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                                                                onClick={() => openBidModal(request)}
                                                             >
-                                                                <FaEdit /> Edit Bid
+                                                                Place Bid
                                                             </button>
-                                                            {/* Feature 3: Withdraw Bid */}
-                                                            <button
-                                                                className="btn btn-outline"
-                                                                onClick={() => handleWithdrawBid(request, myBid)}
-                                                                style={{
-                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                                                                    borderColor: '#dc3545', color: '#dc3545'
-                                                                }}
-                                                            >
-                                                                <FaTimes /> Withdraw
-                                                            </button>
-                                                        </>
-                                                    ) : (
-                                                        <button
-                                                            className="btn btn-primary"
-                                                            onClick={() => openBidModal(request)}
-                                                        >
-                                                            Place Bid
-                                                        </button>
-                                                    )}
-                                                </>
-                                            )}
+                                                        )}
+                                                    </>
+                                                )}
 
-                                            {deadlinePassed && (
-                                                <span style={{
-                                                    padding: '0.5rem 1rem',
-                                                    background: 'rgba(220, 53, 69, 0.2)',
-                                                    borderRadius: '8px',
-                                                    color: '#dc3545',
-                                                    textAlign: 'center',
-                                                    fontSize: '0.85rem'
-                                                }}>
-                                                    Bidding Closed
-                                                </span>
-                                            )}
+                                                {deadlinePassed && (
+                                                    <span style={{
+                                                        padding: '0.5rem 1rem',
+                                                        background: 'rgba(220, 53, 69, 0.2)',
+                                                        borderRadius: '8px',
+                                                        color: '#dc3545',
+                                                        textAlign: 'center',
+                                                        fontSize: '0.85rem'
+                                                    }}>
+                                                        Bidding Closed
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
