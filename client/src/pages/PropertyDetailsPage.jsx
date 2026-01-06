@@ -390,53 +390,16 @@ const PropertyDetailsPage = () => {
                 marginBottom: "3rem",
               }}
             >
-              Experience the epitome of luxury living in this stunning residence
-              located in the heart of {property.location}. Meticulously designed
+              {(!property.description || property.description === 'No description provided') ? `Experience the epitome of luxury living in this stunning residence
+              located in the heart of ${property.location}. Meticulously designed
               with premium finishes and state-of-the-art amenities, this home
               offers an unparalleled blend of sophistication and comfort.
               Features include floor-to-ceiling windows, a gourmet chef's
               kitchen, and expansive outdoor living spaces perfect for
-              entertaining.
+              entertaining.` : property.description}
             </p>
 
-            <h2
-              style={{
-                marginBottom: "1.5rem",
-                fontFamily: "var(--font-heading)",
-              }}
-            >
-              Amenities
-            </h2>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "1rem",
-              }}
-            >
-              {[
-                "Smart Home System",
-                "Infinity Pool",
-                "Private Gym",
-                "Wine Cellar",
-                "24/7 Security",
-                "Home Theater",
-                "Spa & Sauna",
-                "Rooftop Terrace",
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    color: "var(--color-text-light)",
-                  }}
-                >
-                  <FaCheck className="text-accent" size={12} /> {item}
-                </div>
-              ))}
-            </div>
+
           </div>
 
           {/* Bidding Section (Only for sale listings, not for owner) */}
