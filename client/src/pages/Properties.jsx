@@ -350,6 +350,7 @@ const Properties = () => {
                                         key={prop._id || prop.propertyId || prop.id}
                                         data={prop}
                                         index={index}
+                                        showDeleteButton={showMyListings}
                                     />
                                 ))}
                             </AnimatePresence>

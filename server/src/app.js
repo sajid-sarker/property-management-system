@@ -29,8 +29,8 @@ app.use((req, res, next) => {
 });
 
 // Body parser with increased limit for base64 images
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Static files for uploads
 const __dirname = path.resolve();

@@ -1,17 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Box, Flex, HStack, Text, Icon, Badge } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
-import { FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaStar, FaTrash } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaStar, FaTrash, FaEdit } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { propertyService } from '../../services/api';
 
 /**
  * Reusable PropertyCard Component
  * Displays property information with boost/featured badge
+ * @param showDeleteButton - Only show delete button when true (e.g., on My Properties page)
  */
-const PropertyCard = ({ data, index = 0 }) => {
+const PropertyCard = ({ data, index = 0, showDeleteButton = false }) => {
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     // Safety check
     if (!data) return null;
@@ -24,6 +26,12 @@ const PropertyCard = ({ data, index = 0 }) => {
     const imageUrl = data.image || (data.images && data.images[0]) || 'https://placehold.co/400x300/14141f/d4af37?text=No+Image';
     const locationText = data.location || (data.address && `${data.address.city || ''}, ${data.address.state || ''}`) || 'Location N/A';
     const isBoosted = data.priority && data.priority > 1;
+
+    // Check if current user is the owner
+    const isOwner = data.landlord && (
+        (typeof data.landlord === 'object' ? data.landlord?._id : data.landlord)?.toString() === user?._id?.toString() ||
+        (typeof data.landlord === 'object' ? data.landlord?._id : data.landlord)?.toString() === user?.id?.toString()
+    );
 
     return (
         <motion.div
@@ -46,11 +54,39 @@ const PropertyCard = ({ data, index = 0 }) => {
                     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
                 }}
             >
-                {/* Delete Button for Owner - OUTSIDE LINK for safety */}
-                {data.landlord && (
-                    (typeof data.landlord === 'object' ? data.landlord?._id : data.landlord)?.toString() === user?._id?.toString() ||
-                    (typeof data.landlord === 'object' ? data.landlord?._id : data.landlord)?.toString() === user?.id?.toString()
-                ) && (
+                {/* Owner Controls - Only shown on My Properties page */}
+                {showDeleteButton && isOwner && (
+                    <>
+                        {/* Edit Button */}
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                navigate(`/edit-property/${propertyId}`);
+                            }}
+                            style={{
+                                position: "absolute",
+                                top: "10px",
+                                left: "10px",
+                                zIndex: 100,
+                                background: "#3b82f6", // Tailwind blue-500
+                                color: "white",
+                                border: "none",
+                                borderRadius: "50%",
+                                width: "36px",
+                                height: "36px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
+                            }}
+                            title="Edit Property"
+                        >
+                            <FaEdit size={14} />
+                        </button>
+
+                        {/* Delete Button */}
                         <button
                             onClick={async (e) => {
                                 e.preventDefault();
@@ -68,7 +104,7 @@ const PropertyCard = ({ data, index = 0 }) => {
                             style={{
                                 position: "absolute",
                                 top: "10px",
-                                left: "10px",
+                                left: "56px", // Offset for Edit button
                                 zIndex: 100, // High Z-Index
                                 background: "#ef4444", // Tailwind red-500
                                 color: "white",
@@ -86,6 +122,7 @@ const PropertyCard = ({ data, index = 0 }) => {
                         >
                             <FaTrash size={14} />
                         </button>
+                    </>
                     )}
 
                 {/* Main Card Content Link */}

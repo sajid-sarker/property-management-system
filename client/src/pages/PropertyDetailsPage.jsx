@@ -21,6 +21,7 @@ import BidHistorySection from "../components/properties/BidHistorySection";
 import ErrorBoundary from "../components/common/ErrorBoundary";
 import BoostPropertyModal from "../components/properties/BoostPropertyModal";
 import Navbar from "../components/common/Navbar";
+import ImageCarousel from "../components/properties/ImageCarousel";
 
 const PropertyDetailsPage = () => {
   const { id } = useParams();
@@ -219,11 +220,7 @@ const PropertyDetailsPage = () => {
             position: "relative",
           }}
         >
-          <img
-            src={imageUrl}
-            alt={property.title || "Property"}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
+          <ImageCarousel images={property.images} title={property.title} />
           <div
             style={{
               position: "absolute",
@@ -279,10 +276,36 @@ const PropertyDetailsPage = () => {
                     fontSize: "1rem",
                     textTransform: "uppercase",
                     letterSpacing: "1px",
+                    marginBottom: "1rem"
                   }}
                 >
                   {typeText}
                 </div>
+
+                {/* Edit Button for Owner */}
+                {isOwner && (
+                  <button
+                    onClick={() => navigate(`/edit-property/${id}`)}
+                    style={{
+                      background: "#3b82f6", // Blue color
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "0.5rem 1rem",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      cursor: "pointer",
+                      fontSize: "0.9rem",
+                      fontWeight: "600",
+                      transition: "all 0.2s"
+                    }}
+                    onMouseOver={(e) => e.target.style.background = "#2563eb"}
+                    onMouseOut={(e) => e.target.style.background = "#3b82f6"}
+                  >
+                    <FaEdit /> Edit Property
+                  </button>
+                )}
               </div>
             </div>
           </div>

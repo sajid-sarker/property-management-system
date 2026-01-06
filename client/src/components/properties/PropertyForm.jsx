@@ -10,7 +10,7 @@ import {
     Textarea,
     Icon,
 } from '@chakra-ui/react';
-import { FaRocket, FaCloudUploadAlt, FaCheck, FaSpinner } from 'react-icons/fa';
+import { FaRocket, FaCloudUploadAlt, FaCheck, FaSpinner, FaTimes } from 'react-icons/fa';
 import Button from '../common/Button';
 import { uploadService } from '../../services/api';
 
@@ -38,7 +38,7 @@ const PropertyForm = ({
         baths: initialData.baths || '',
         sqft: initialData.sqft || '',
         description: initialData.description || '',
-        image: initialData.image || '',
+        images: initialData.images || [],
         // New fields for sell/rent
         listingType: initialData.listingType || 'rent',
         startingPrice: initialData.startingPrice || '',
@@ -76,19 +76,33 @@ const PropertyForm = ({
             const response = await uploadService.uploadImage(file);
             const imageData = response.data?.data || response.data;
             
-            // Response is now a complete base64 data URL
-            setFormData((prev) => ({ ...prev, image: imageData }));
+            // Append new image to images array
+            setFormData((prev) => ({ ...prev, images: [...prev.images, imageData] }));
         } catch (error) {
             console.error('Failed to upload image:', error);
             setUploadError('Failed to upload image. Please try again.');
         } finally {
             setUploading(false);
         }
+        // Reset file input so same file can be uploaded again
+        e.target.value = '';
+    };
+
+    const handleRemoveImage = (indexToRemove) => {
+        setFormData((prev) => ({
+            ...prev,
+            images: prev.images.filter((_, index) => index !== indexToRemove)
+        }));
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(formData);
+        // Include first image as 'image' for backward compatibility
+        const submitData = {
+            ...formData,
+            image: formData.images[0] || ''
+        };
+        onSubmit(submitData);
     };
 
     const inputStyles = {
@@ -391,9 +405,57 @@ const PropertyForm = ({
                 </GridItem>
 
 
-                {/* Image Upload Input */}
+                {/* Image Upload Section */}
                 <GridItem colSpan={{ base: 1, md: 2 }}>
-                    <Text {...labelStyles}>Property Image</Text>
+                    <Text {...labelStyles}>Property Images</Text>
+                    
+                    {/* Display Uploaded Images */}
+                    {formData.images.length > 0 && (
+                        <Box
+                            display="grid"
+                            gridTemplateColumns="repeat(auto-fill, minmax(150px, 1fr))"
+                            gap="4"
+                            mb="4"
+                        >
+                            {formData.images.map((img, index) => (
+                                <Box key={index} position="relative" borderRadius="8px" overflow="hidden">
+                                    <img
+                                        src={img}
+                                        alt={`Property ${index + 1}`}
+                                        style={{
+                                            width: '100%',
+                                            height: '120px',
+                                            objectFit: 'cover',
+                                            border: '1px solid rgba(255,255,255,0.1)'
+                                        }}
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = 'https://placehold.co/200x120/14141f/d4af37?text=Error';
+                                        }}
+                                    />
+                                    <Box
+                                        as="button"
+                                        type="button"
+                                        position="absolute"
+                                        top="4px"
+                                        right="4px"
+                                        bg="rgba(255, 100, 100, 0.9)"
+                                        color="white"
+                                        p="1"
+                                        borderRadius="full"
+                                        cursor="pointer"
+                                        transition="all 0.2s"
+                                        _hover={{ bg: '#ff4444' }}
+                                        onClick={() => handleRemoveImage(index)}
+                                    >
+                                        <Icon as={FaTimes} boxSize="3" />
+                                    </Box>
+                                </Box>
+                            ))}
+                        </Box>
+                    )}
+
+                    {/* Upload Button */}
                     <Box
                         as="label"
                         display="flex"
@@ -403,8 +465,8 @@ const PropertyForm = ({
                         p="6"
                         borderRadius="12px"
                         border="2px dashed"
-                        borderColor={formData.image ? '#d4af37' : 'rgba(255, 255, 255, 0.2)'}
-                        bg={formData.image ? 'rgba(212, 175, 55, 0.05)' : 'rgba(0, 0, 0, 0.3)'}
+                        borderColor={formData.images.length > 0 ? '#d4af37' : 'rgba(255, 255, 255, 0.2)'}
+                        bg={formData.images.length > 0 ? 'rgba(212, 175, 55, 0.05)' : 'rgba(0, 0, 0, 0.3)'}
                         cursor="pointer"
                         transition="all 0.2s ease"
                         _hover={{
@@ -423,17 +485,13 @@ const PropertyForm = ({
                                 <Icon as={FaSpinner} color="#d4af37" boxSize="8" className="spin" />
                                 <Text color="#a0a0a0">Uploading...</Text>
                             </VStack>
-                        ) : formData.image ? (
-                            <VStack gap="2">
-                                <Icon as={FaCheck} color="#4ade80" boxSize="8" />
-                                <Text color="#4ade80" fontWeight="600">Image Uploaded</Text>
-                                <Text color="#a0a0a0" fontSize="sm">Click to change</Text>
-                            </VStack>
                         ) : (
                             <VStack gap="2">
                                 <Icon as={FaCloudUploadAlt} color="#d4af37" boxSize="10" />
-                                <Text color="white" fontWeight="600">Click to upload image</Text>
-                                <Text color="#a0a0a0" fontSize="sm">PNG, JPG up to 1MB</Text>
+                                <Text color="white" fontWeight="600">
+                                    {formData.images.length > 0 ? 'Add another image' : 'Click to upload image'}
+                                </Text>
+                                <Text color="#a0a0a0" fontSize="sm">PNG, JPG up to 1MB each</Text>
                             </VStack>
                         )}
                     </Box>
@@ -441,25 +499,6 @@ const PropertyForm = ({
                         <Text color="#f87171" fontSize="sm" mt="2">
                             {uploadError}
                         </Text>
-                    )}
-                    {formData.image && (
-                        <Box mt="4" position="relative">
-                            <img
-                                src={formData.image}
-                                alt="Property Preview"
-                                style={{
-                                    maxHeight: '200px',
-                                    width: '100%',
-                                    borderRadius: '8px',
-                                    objectFit: 'cover',
-                                    border: '1px solid rgba(255,255,255,0.1)'
-                                }}
-                                onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = 'https://placehold.co/800x400/14141f/d4af37?text=Image+Preview';
-                                }}
-                            />
-                        </Box>
                     )}
                 </GridItem>
 

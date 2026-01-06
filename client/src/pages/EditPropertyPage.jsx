@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, VStack, HStack, Text, Heading, Input, Grid, GridItem } from '@chakra-ui/react';
-import { propertyService } from '../services/api';
+import { Box, VStack, HStack, Text, Heading, Input, Grid, GridItem, Icon } from '@chakra-ui/react';
+import { FaCloudUploadAlt, FaSpinner, FaTimes } from 'react-icons/fa';
+import { propertyService, uploadService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 // Import reusable components
@@ -25,10 +26,12 @@ const EditPropertyPage = () => {
     const [error, setError] = useState(null);
 
     const [formData, setFormData] = useState({
-        image: '',
+        images: [],
         startingPrice: '',
         price: '',
     });
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState('');
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -52,7 +55,7 @@ const EditPropertyPage = () => {
 
                 setProperty(propertyData);
                 setFormData({
-                    image: propertyData.image || (propertyData.images && propertyData.images[0]) || '',
+                    images: propertyData.images || [],
                     startingPrice: propertyData.startingPrice || '',
                     price: propertyData.price || '',
                 });
@@ -78,8 +81,8 @@ const EditPropertyPage = () => {
         setSaving(true);
         try {
             const updateData = {
-                images: formData.image ? [formData.image] : undefined,
-                image: formData.image || undefined,
+                images: formData.images,
+                image: formData.images[0] || '',
             };
 
             // Add price fields based on listing type
@@ -94,7 +97,11 @@ const EditPropertyPage = () => {
             navigate(`/property/${id}`);
         } catch (err) {
             console.error('Failed to update property:', err);
-            alert(err.response?.data?.message || 'Failed to update property');
+            if (err.response?.status === 413) {
+                alert('Images are too large. Please reduce image size or count.');
+            } else {
+                alert(err.response?.data?.message || 'Failed to update property');
+            }
         } finally {
             setSaving(false);
         }
@@ -116,6 +123,43 @@ const EditPropertyPage = () => {
         } finally {
             setDeleting(false);
         }
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            setUploadError('Please select an image file');
+            return;
+        }
+
+        if (file.size > 1 * 1024 * 1024) {
+            setUploadError('Image must be less than 1MB');
+            return;
+        }
+
+        setUploading(true);
+        setUploadError('');
+
+        try {
+            const response = await uploadService.uploadImage(file);
+            const imageData = response.data?.data || response.data;
+            setFormData((prev) => ({ ...prev, images: [...prev.images, imageData] }));
+        } catch (error) {
+            console.error('Failed to upload image:', error);
+            setUploadError('Failed to upload image. Please try again.');
+        } finally {
+            setUploading(false);
+        }
+        e.target.value = '';
+    };
+
+    const handleRemoveImage = (indexToRemove) => {
+        setFormData((prev) => ({
+            ...prev,
+            images: prev.images.filter((_, index) => index !== indexToRemove)
+        }));
     };
 
     const inputStyles = {
@@ -196,39 +240,101 @@ const EditPropertyPage = () => {
                     border="1px solid rgba(212, 175, 55, 0.2)"
                 >
                     <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="6">
-                        {/* Current Image Preview */}
+                        {/* Property Images Section */}
                         <GridItem colSpan={{ base: 1, md: 2 }}>
-                            <Text {...labelStyles}>Current Image</Text>
-                            {formData.image && (
-                                <Box mb="4" borderRadius="8px" overflow="hidden">
-                                    <img
-                                        src={formData.image}
-                                        alt="Property"
-                                        style={{
-                                            maxHeight: '200px',
-                                            width: '100%',
-                                            objectFit: 'cover',
-                                            border: '1px solid rgba(255,255,255,0.1)'
-                                        }}
-                                        onError={(e) => {
-                                            e.target.onerror = null;
-                                            e.target.src = 'https://placehold.co/800x400/14141f/d4af37?text=Invalid+Image+URL';
-                                        }}
-                                    />
+                            <Text {...labelStyles}>Property Images</Text>
+                            
+                            {/* Display Current Images */}
+                            {formData.images.length > 0 && (
+                                <Box
+                                    display="grid"
+                                    gridTemplateColumns="repeat(auto-fill, minmax(150px, 1fr))"
+                                    gap="4"
+                                    mb="4"
+                                >
+                                    {formData.images.map((img, index) => (
+                                        <Box key={index} position="relative" borderRadius="8px" overflow="hidden">
+                                            <img
+                                                src={img}
+                                                alt={`Property ${index + 1}`}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '120px',
+                                                    objectFit: 'cover',
+                                                    border: '1px solid rgba(255,255,255,0.1)'
+                                                }}
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = 'https://placehold.co/200x120/14141f/d4af37?text=Error';
+                                                }}
+                                            />
+                                            <Box
+                                                as="button"
+                                                type="button"
+                                                position="absolute"
+                                                top="4px"
+                                                right="4px"
+                                                bg="rgba(255, 100, 100, 0.9)"
+                                                color="white"
+                                                p="1"
+                                                borderRadius="full"
+                                                cursor="pointer"
+                                                transition="all 0.2s"
+                                                _hover={{ bg: '#ff4444' }}
+                                                onClick={() => handleRemoveImage(index)}
+                                            >
+                                                <Icon as={FaTimes} boxSize="3" />
+                                            </Box>
+                                        </Box>
+                                    ))}
                                 </Box>
                             )}
-                        </GridItem>
 
-                        {/* Image URL */}
-                        <GridItem colSpan={{ base: 1, md: 2 }}>
-                            <Text {...labelStyles}>Property Image URL</Text>
-                            <Input
-                                name="image"
-                                value={formData.image}
-                                onChange={handleChange}
-                                placeholder="https://images.unsplash.com/..."
-                                {...inputStyles}
-                            />
+                            {/* Upload Button */}
+                            <Box
+                                as="label"
+                                display="flex"
+                                flexDirection="column"
+                                alignItems="center"
+                                justifyContent="center"
+                                p="6"
+                                borderRadius="12px"
+                                border="2px dashed"
+                                borderColor={formData.images.length > 0 ? '#d4af37' : 'rgba(255, 255, 255, 0.2)'}
+                                bg={formData.images.length > 0 ? 'rgba(212, 175, 55, 0.05)' : 'rgba(0, 0, 0, 0.3)'}
+                                cursor="pointer"
+                                transition="all 0.2s ease"
+                                _hover={{
+                                    borderColor: '#d4af37',
+                                    bg: 'rgba(212, 175, 55, 0.1)',
+                                }}
+                            >
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    style={{ display: 'none' }}
+                                />
+                                {uploading ? (
+                                    <VStack gap="2">
+                                        <Icon as={FaSpinner} color="#d4af37" boxSize="8" className="spin" />
+                                        <Text color="#a0a0a0">Uploading...</Text>
+                                    </VStack>
+                                ) : (
+                                    <VStack gap="2">
+                                        <Icon as={FaCloudUploadAlt} color="#d4af37" boxSize="10" />
+                                        <Text color="white" fontWeight="600">
+                                            {formData.images.length > 0 ? 'Add another image' : 'Click to upload image'}
+                                        </Text>
+                                        <Text color="#a0a0a0" fontSize="sm">PNG, JPG up to 1MB each</Text>
+                                    </VStack>
+                                )}
+                            </Box>
+                            {uploadError && (
+                                <Text color="#f87171" fontSize="sm" mt="2">
+                                    {uploadError}
+                                </Text>
+                            )}
                         </GridItem>
 
                         {/* Price Fields based on listing type */}
