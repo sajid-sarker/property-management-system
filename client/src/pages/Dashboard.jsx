@@ -6,7 +6,7 @@ import {
   FaCheck,
   FaHardHat,
 } from "react-icons/fa";
-import { authService, notificationService, dashboardService, projectService } from "../services/api";
+import { authService, notificationService, dashboardService, projectService, propertyBidService } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import Sidebar from "../components/common/Sidebar";
 import UserProfileCard from "../components/users/UserProfileCard";
@@ -104,53 +104,71 @@ const Dashboard = () => {
   }, [user, activeTab]);
 
   // Handle accepting a bid (landlord)
+  // Two types of bids:
+  // 1. Property bids (tenant -> landlord): notification has propertyBidId
+  // 2. Project bids (company -> landlord): notification has projectId + bidId
   const handleAcceptBid = async (notification) => {
-    if (!notification.projectId || !notification.bidId) {
-      // Use relatedId as bidId if bidId not set
-      if (!notification.relatedId) {
+    // Determine bid type based on what IDs are present
+    const isPropertyBid = !!notification.propertyBidId;
+    const isProjectBid = !!notification.projectId;
+
+    // For property bids: need propertyBidId
+    // For project bids: need projectId and bidId
+    if (isPropertyBid) {
+      // Property bid - use propertyBidService
+      if (!window.confirm("Are you sure you want to accept this bid? This will reject all other bids on this property.")) {
+        return;
+      }
+
+      setAcceptingBid(notification._id);
+      try {
+        await propertyBidService.acceptBid(notification.propertyBidId);
+        setAcceptedBids(prev => new Set([...prev, notification._id]));
+        alert("Bid accepted successfully!");
+
+        // Refresh notifications
+        const response = await notificationService.getUserNotifications();
+        setNotifications(response.data);
+      } catch (error) {
+        console.error("Failed to accept property bid:", error);
+        alert(error.response?.data?.message || "Failed to accept bid. Please try again.");
+      } finally {
+        setAcceptingBid(null);
+      }
+    } else if (isProjectBid) {
+      // Project bid - use projectService
+      const bidId = notification.bidId || notification.relatedId;
+      if (!bidId) {
         alert("Cannot accept this bid - missing bid reference");
         return;
       }
-    }
 
-    const bidId = notification.bidId || notification.relatedId;
-
-    if (!window.confirm("Are you sure you want to accept this proposal? This will reject all other bids.")) {
-      return;
-    }
-
-    setAcceptingBid(notification._id);
-    try {
-      // We need to get the project ID from the bid
-      // First, let's try to get it from notification
-      let projectId = notification.projectId;
-
-      if (!projectId) {
-        // If projectId not in notification, we need to fetch the bid to get project
-        alert("Unable to accept - project reference missing. Please try refreshing.");
-        setAcceptingBid(null);
+      if (!window.confirm("Are you sure you want to accept this proposal? This will reject all other bids.")) {
         return;
       }
 
-      await projectService.acceptBid(projectId, bidId);
+      setAcceptingBid(notification._id);
+      try {
+        await projectService.acceptBid(notification.projectId, bidId);
+        setAcceptedBids(prev => new Set([...prev, notification._id]));
+        alert("Proposal accepted successfully!");
 
-      // Mark this bid as accepted so the button won't show again
-      setAcceptedBids(prev => new Set([...prev, notification._id]));
+        // Refresh notifications
+        const response = await notificationService.getUserNotifications();
+        setNotifications(response.data);
 
-      alert("Proposal accepted successfully!");
-
-      // Refresh notifications
-      const response = await notificationService.getUserNotifications();
-      setNotifications(response.data);
-
-      // Refresh under development projects
-      const devResponse = await projectService.getUnderDevelopment();
-      setUnderDevProjects(devResponse.data?.data || []);
-    } catch (error) {
-      console.error("Failed to accept bid:", error);
-      alert(error.response?.data?.message || "Failed to accept proposal. Please try again.");
-    } finally {
-      setAcceptingBid(null);
+        // Refresh under development projects
+        const devResponse = await projectService.getUnderDevelopment();
+        setUnderDevProjects(devResponse.data?.data || []);
+      } catch (error) {
+        console.error("Failed to accept project bid:", error);
+        alert(error.response?.data?.message || "Failed to accept proposal. Please try again.");
+      } finally {
+        setAcceptingBid(null);
+      }
+    } else {
+      // Legacy notification without proper bid references - fallback
+      alert("Unable to accept - bid reference missing. This may be an older notification. Please try refreshing or viewing the property/project directly.");
     }
   };
 
