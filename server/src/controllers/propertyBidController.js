@@ -119,14 +119,15 @@ export const placeBid = async (req, res) => {
             status: "bidding"
         });
 
-        // Notify landlord
+        // Notify landlord - include propertyBidId for accept action
         if (property.landlord) {
             const bidderName = req.user.name || "A user";
             await Notification.create({
                 user: property.landlord,
                 message: `${bidderName} placed a bid of $${bidAmount} on your property: "${property.title}"`,
                 type: 'bid_received',
-                relatedId: property._id,
+                relatedId: property._id,        // Property ID for navigation
+                propertyBidId: newBid._id,      // PropertyBid ID for accept action
                 isRead: false
             });
         }

@@ -27,6 +27,12 @@ const notificationSchema = new mongoose.Schema(
       ref: "Project",
       required: false
     },
+    // For property bids (tenant -> landlord)
+    propertyBidId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PropertyBid",
+      required: false
+    },
     isRead: { type: Boolean, default: false },
   },
   { timestamps: true }
