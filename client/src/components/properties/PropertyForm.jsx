@@ -42,7 +42,8 @@ const PropertyForm = ({
         // New fields for sell/rent
         listingType: initialData.listingType || 'rent',
         startingPrice: initialData.startingPrice || '',
-        isBiddable: initialData.isBiddable || false,
+        // Default to true for new listings; respect existing value for edits
+        isBiddable: initialData.isBiddable !== undefined ? initialData.isBiddable : true,
     });
 
     const [uploading, setUploading] = useState(false);
@@ -50,7 +51,14 @@ const PropertyForm = ({
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData((prev) => {
+            const updated = { ...prev, [name]: value };
+            // Auto-enable bidding when switching to sell listing type
+            if (name === 'listingType' && value === 'sell' && !prev.isBiddable) {
+                updated.isBiddable = true;
+            }
+            return updated;
+        });
     };
 
     const handleFileChange = async (e) => {
@@ -75,7 +83,7 @@ const PropertyForm = ({
         try {
             const response = await uploadService.uploadImage(file);
             const imageData = response.data?.data || response.data;
-            
+
             // Append new image to images array
             setFormData((prev) => ({ ...prev, images: [...prev.images, imageData] }));
         } catch (error) {
@@ -408,7 +416,7 @@ const PropertyForm = ({
                 {/* Image Upload Section */}
                 <GridItem colSpan={{ base: 1, md: 2 }}>
                     <Text {...labelStyles}>Property Images</Text>
-                    
+
                     {/* Display Uploaded Images */}
                     {formData.images.length > 0 && (
                         <Box

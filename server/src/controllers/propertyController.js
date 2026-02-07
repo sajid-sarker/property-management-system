@@ -138,6 +138,10 @@ export const createProperty = async (req, res) => {
     property.currentPrice = property.currentPrice || property.startingPrice;
     // Set price field for backward compatibility
     property.price = property.price || property.startingPrice;
+    // Enable bidding by default for sell listings (unless explicitly disabled by landlord)
+    if (property.isBiddable === undefined) {
+      property.isBiddable = true;
+    }
   } else {
     // For RENT listings: price (monthly rent) is required
     if (!property.price || property.price <= 0) {
